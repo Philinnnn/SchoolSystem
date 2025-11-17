@@ -33,8 +33,7 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        // Не всегда принудительно возвращать на '/', позволяя сперва восстановить оригинальный URL
-                        .defaultSuccessUrl("/", false)
+                        .defaultSuccessUrl("/dashboard", true)
                         .permitAll()
                 )
                 .logout(logout -> logout

@@ -15,6 +15,35 @@ body {
     height: 100vh;
 }
 
+/* Контейнер для дашбордов */
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Заголовок дашборда */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #1b1b1b;
+    border-radius: 15px;
+}
+
+header h1 {
+    margin: 0;
+    font-weight: 300;
+}
+
+header div {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 /* Карточка */
 .card {
     background: #1b1b1b;
@@ -26,9 +55,33 @@ body {
     animation: fadeIn 0.4s ease;
 }
 
+.container .card {
+    width: auto;
+    text-align: left;
+}
+
 .card h2 {
     margin-bottom: 25px;
     font-weight: 300;
+}
+
+.card h3 {
+    color: #4a79ff;
+    font-weight: 400;
+}
+
+.card ul {
+    list-style: none;
+    padding: 0;
+}
+
+.card ul li {
+    padding: 8px 0;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.card ul li:last-child {
+    border-bottom: none;
 }
 
 /* Инпуты */
@@ -62,8 +115,31 @@ body {
     box-sizing: border-box;
 }
 
+header .btn {
+    width: auto;
+    padding: 8px 20px;
+    font-size: 14px;
+}
+
 .btn:hover {
     background: #3c63d6;
+}
+
+/* Сообщения */
+.error-message, .success-message {
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.error-message {
+    background: #ff4a4a33;
+    border: 1px solid #ff4a4a;
+}
+
+.success-message {
+    background: #4aff4a33;
+    border: 1px solid #4aff4a;
 }
 
 /* Анимация */

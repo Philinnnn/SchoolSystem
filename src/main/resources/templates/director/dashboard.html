@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель директора — SchoolSystem</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Панель директора</h1>
+        <div>
+            <span>Добро пожаловать, <strong th:text="${username}">director</strong>!</span>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2>Управление школой</h2>
+        <p>Вы вошли как <strong>Директор</strong>. Вы можете управлять учителями, студентами и предметами.</p>
+
+        <div style="margin-top: 20px;">
+            <h3>Доступные функции:</h3>
+            <ul>
+                <li>Управление учителями</li>
+                <li>Управление студентами</li>
+                <li>Управление предметами</li>
+                <li>Просмотр расписания</li>
+                <li>Отчёты и статистика</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+

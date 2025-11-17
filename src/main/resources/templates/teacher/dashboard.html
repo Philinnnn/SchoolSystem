@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель учителя — SchoolSystem</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Панель учителя</h1>
+        <div>
+            <span>Добро пожаловать, <strong th:text="${username}">teacher</strong>!</span>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2>Мои предметы и классы</h2>
+        <p>Вы вошли как <strong>Учитель</strong>. Вы можете управлять своими предметами и оценками студентов.</p>
+
+        <div style="margin-top: 20px;">
+            <h3>Доступные функции:</h3>
+            <ul>
+                <li>Просмотр моих предметов</li>
+                <li>Управление оценками студентов</li>
+                <li>Просмотр расписания</li>
+                <li>Просмотр списка студентов</li>
+                <li>Создание заданий</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
