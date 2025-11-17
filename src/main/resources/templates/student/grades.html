@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Мои оценки — SchoolSystem</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Мои оценки</h1>
+        <div>
+            <span>Студент: <strong th:text="${fullName}">student</strong></span>
+            <a href="/student" class="btn">Назад</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2>История оценок</h2>
+
+        <div th:if="${error}" class="error-message">
+            <p>Ошибка загрузки данных: <span th:text="${error}"></span></p>
+        </div>
+
+        <div th:if="${grades != null and !grades.empty}">
+            <table class="grades-table">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Предмет</th>
+                        <th>Оценка</th>
+                        <th>Учитель</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="grade : ${grades}">
+                        <td th:text="${grade.gradeDate != null ? #temporals.format(grade.gradeDate, 'dd.MM.yyyy') : '-'}">01.01.2025</td>
+                        <td th:text="${grade.subject != null ? grade.subject.name : '-'}">Математика</td>
+                        <td>
+                            <span class="grade-badge" th:classappend="${grade.grade >= 4 ? 'grade-good' : (grade.grade == 3 ? 'grade-ok' : 'grade-bad')}"
+                                  th:text="${grade.grade}">5</span>
+                        </td>
+                        <td th:text="${grade.teacher != null and grade.teacher.user != null ? grade.teacher.user.fullName : '-'}">Учитель</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${grades == null or grades.empty}" class="empty-message">
+            <p>У вас пока нет оценок</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

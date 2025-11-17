@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Учителя — SchoolSystem</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Учителя</h1>
+        <div>
+            <span>Студент: <strong th:text="${fullName}">student</strong></span>
+            <a href="/student" class="btn">Назад</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2>Список учителей</h2>
+
+        <div th:if="${error}" class="error-message">
+            <p>Ошибка загрузки данных: <span th:text="${error}"></span></p>
+        </div>
+
+        <div th:if="${teachers != null and !teachers.empty}" class="teachers-list">
+            <div th:each="teacher : ${teachers}" class="teacher-card">
+                <h3 th:text="${teacher.user != null ? teacher.user.fullName : 'Имя не указано'}">Имя учителя</h3>
+                <div class="teacher-subjects">
+                    <strong>Предметы:</strong>
+                    <span th:if="${teacher.subjects == null or teacher.subjects.empty}">Нет назначенных предметов</span>
+                    <ul th:if="${teacher.subjects != null and !teacher.subjects.empty}">
+                        <li th:each="subject : ${teacher.subjects}" th:text="${subject.name}">Предмет</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${teachers == null or teachers.empty}" class="empty-message">
+            <p>Нет учителей в системе</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+

@@ -11,7 +11,7 @@
     <header>
         <h1>Панель директора</h1>
         <div>
-            <span>Добро пожаловать, <strong th:text="${username}">director</strong>!</span>
+            <span>Добро пожаловать, <strong th:text="${username}">director</strong></span>
             <form method="post" th:action="@{/logout}" style="display: inline;">
                 <button class="btn" type="submit">Выйти</button>
             </form>
@@ -22,8 +22,8 @@
         <h2>Управление школой</h2>
         <p>Вы вошли как <strong>Директор</strong>. Вы можете управлять учителями, студентами и предметами.</p>
 
-        <div style="margin-top: 20px;">
-            <h3>Доступные функции:</h3>
+        <div style="margin-top: 30px;">
+            <h3>Доступные функции</h3>
             <ul>
                 <li>Управление учителями</li>
                 <li>Управление студентами</li>
@@ -37,4 +37,3 @@
 
 </body>
 </html>
-

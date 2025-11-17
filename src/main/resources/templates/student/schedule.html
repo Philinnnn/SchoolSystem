@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Расписание — SchoolSystem</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Расписание занятий</h1>
+        <div>
+            <span>Студент: <strong th:text="${fullName}">student</strong> | Класс: <strong th:text="${className}">10А</strong></span>
+            <a href="/student" class="btn">Назад</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2>Расписание для класса <span th:text="${className}">10А</span></h2>
+
+        <div th:if="${error}" class="error-message">
+            <p>Ошибка загрузки данных: <span th:text="${error}"></span></p>
+        </div>
+
+        <div th:if="${schedules != null and !schedules.empty}" class="schedule-container">
+            <!-- Понедельник -->
+            <div class="schedule-day">
+                <h3>Понедельник</h3>
+                <div class="schedule-lessons">
+                    <div th:each="lesson : ${schedules}" th:if="${lesson.dayOfWeek.name() == 'MONDAY'}" class="lesson-card">
+                        <div class="lesson-time">
+                            <span th:text="${#temporals.format(lesson.startTime, 'HH:mm')}">08:00</span>
+                            -
+                            <span th:text="${#temporals.format(lesson.endTime, 'HH:mm')}">09:30</span>
+                        </div>
+                        <div class="lesson-info">
+                            <h4 th:text="${lesson.subject.name}">Математика</h4>
+                            <p th:text="${lesson.teacher.user.fullName}">Учитель</p>
+                            <small th:if="${lesson.roomNumber != null}" th:text="'Кабинет: ' + ${lesson.roomNumber}">Кабинет: 201</small>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(schedules.?[dayOfWeek.name() == 'MONDAY'])}" class="empty-day">
+                        <p>Нет занятий</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вторник -->
+            <div class="schedule-day">
+                <h3>Вторник</h3>
+                <div class="schedule-lessons">
+                    <div th:each="lesson : ${schedules}" th:if="${lesson.dayOfWeek.name() == 'TUESDAY'}" class="lesson-card">
+                        <div class="lesson-time">
+                            <span th:text="${#temporals.format(lesson.startTime, 'HH:mm')}">08:00</span>
+                            -
+                            <span th:text="${#temporals.format(lesson.endTime, 'HH:mm')}">09:30</span>
+                        </div>
+                        <div class="lesson-info">
+                            <h4 th:text="${lesson.subject.name}">Математика</h4>
+                            <p th:text="${lesson.teacher.user.fullName}">Учитель</p>
+                            <small th:if="${lesson.roomNumber != null}" th:text="'Кабинет: ' + ${lesson.roomNumber}">Кабинет: 201</small>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(schedules.?[dayOfWeek.name() == 'TUESDAY'])}" class="empty-day">
+                        <p>Нет занятий</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Среда -->
+            <div class="schedule-day">
+                <h3>Среда</h3>
+                <div class="schedule-lessons">
+                    <div th:each="lesson : ${schedules}" th:if="${lesson.dayOfWeek.name() == 'WEDNESDAY'}" class="lesson-card">
+                        <div class="lesson-time">
+                            <span th:text="${#temporals.format(lesson.startTime, 'HH:mm')}">08:00</span>
+                            -
+                            <span th:text="${#temporals.format(lesson.endTime, 'HH:mm')}">09:30</span>
+                        </div>
+                        <div class="lesson-info">
+                            <h4 th:text="${lesson.subject.name}">Математика</h4>
+                            <p th:text="${lesson.teacher.user.fullName}">Учитель</p>
+                            <small th:if="${lesson.roomNumber != null}" th:text="'Кабинет: ' + ${lesson.roomNumber}">Кабинет: 201</small>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(schedules.?[dayOfWeek.name() == 'WEDNESDAY'])}" class="empty-day">
+                        <p>Нет занятий</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Четверг -->
+            <div class="schedule-day">
+                <h3>Четверг</h3>
+                <div class="schedule-lessons">
+                    <div th:each="lesson : ${schedules}" th:if="${lesson.dayOfWeek.name() == 'THURSDAY'}" class="lesson-card">
+                        <div class="lesson-time">
+                            <span th:text="${#temporals.format(lesson.startTime, 'HH:mm')}">08:00</span>
+                            -
+                            <span th:text="${#temporals.format(lesson.endTime, 'HH:mm')}">09:30</span>
+                        </div>
+                        <div class="lesson-info">
+                            <h4 th:text="${lesson.subject.name}">Математика</h4>
+                            <p th:text="${lesson.teacher.user.fullName}">Учитель</p>
+                            <small th:if="${lesson.roomNumber != null}" th:text="'Кабинет: ' + ${lesson.roomNumber}">Кабинет: 201</small>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(schedules.?[dayOfWeek.name() == 'THURSDAY'])}" class="empty-day">
+                        <p>Нет занятий</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Пятница -->
+            <div class="schedule-day">
+                <h3>Пятница</h3>
+                <div class="schedule-lessons">
+                    <div th:each="lesson : ${schedules}" th:if="${lesson.dayOfWeek.name() == 'FRIDAY'}" class="lesson-card">
+                        <div class="lesson-time">
+                            <span th:text="${#temporals.format(lesson.startTime, 'HH:mm')}">08:00</span>
+                            -
+                            <span th:text="${#temporals.format(lesson.endTime, 'HH:mm')}">09:30</span>
+                        </div>
+                        <div class="lesson-info">
+                            <h4 th:text="${lesson.subject.name}">Математика</h4>
+                            <p th:text="${lesson.teacher.user.fullName}">Учитель</p>
+                            <small th:if="${lesson.roomNumber != null}" th:text="'Кабинет: ' + ${lesson.roomNumber}">Кабинет: 201</small>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(schedules.?[dayOfWeek.name() == 'FRIDAY'])}" class="empty-day">
+                        <p>Нет занятий</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${schedules == null or schedules.empty}" class="empty-message">
+            <p>Расписание для класса <span th:text="${className}">10А</span> пока не составлено</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+

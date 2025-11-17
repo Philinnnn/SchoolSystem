@@ -9,13 +9,13 @@
 
 <div class="center-container">
     <div class="card">
-        <h2>Вход в SchoolSystem</h2>
+        <h2>Вход в систему</h2>
 
-        <div th:if="${param.error}" class="error-message" style="color: red; margin-bottom: 10px;">
+        <div th:if="${param.error}" class="error-message">
             Неверный логин или пароль
         </div>
 
-        <div th:if="${param.logout}" class="success-message" style="color: green; margin-bottom: 10px;">
+        <div th:if="${param.logout}" class="success-message">
             Вы успешно вышли из системы
         </div>
 

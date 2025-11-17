@@ -16,4 +16,3 @@ public class TeacherController {
         return "teacher/dashboard";
     }
 }
-

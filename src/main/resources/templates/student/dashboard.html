@@ -11,7 +11,7 @@
     <header>
         <h1>Панель студента</h1>
         <div>
-            <span>Добро пожаловать, <strong th:text="${username}">student</strong>!</span>
+            <span>Добро пожаловать, <strong th:text="${fullName}">student</strong></span>
             <form method="post" th:action="@{/logout}" style="display: inline;">
                 <button class="btn" type="submit">Выйти</button>
             </form>
@@ -19,22 +19,33 @@
     </header>
 
     <div class="card">
-        <h2>Мои предметы и оценки</h2>
-        <p>Вы вошли как <strong>Студент</strong>. Вы можете просматривать свои оценки и задания.</p>
+        <h2>Моя информация</h2>
+        <p>Вы вошли как <strong>Студент</strong>.</p>
+        <p><strong>Класс:</strong> <span th:text="${className}">10А</span></p>
 
-        <div style="margin-top: 20px;">
-            <h3>Доступные функции:</h3>
-            <ul>
-                <li>Просмотр моих оценок</li>
-                <li>Просмотр заданий</li>
-                <li>Просмотр расписания</li>
-                <li>Просмотр учителей</li>
-                <li>Просмотр моего класса</li>
-            </ul>
+        <div style="margin-top: 30px;">
+            <h3>Доступные разделы</h3>
+            <div class="menu-grid">
+                <a href="/student/grades" class="menu-item">
+                    <h4>Мои оценки</h4>
+                    <p>Просмотр всех оценок по предметам</p>
+                </a>
+                <a href="/student/subjects" class="menu-item">
+                    <h4>Предметы</h4>
+                    <p>Список всех предметов</p>
+                </a>
+                <a href="/student/teachers" class="menu-item">
+                    <h4>Учителя</h4>
+                    <p>Список преподавателей</p>
+                </a>
+                <a href="/student/schedule" class="menu-item">
+                    <h4>Расписание</h4>
+                    <p>Расписание занятий моего класса</p>
+                </a>
+            </div>
         </div>
     </div>
 </div>
 
 </body>
 </html>
-

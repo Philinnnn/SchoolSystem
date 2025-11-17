@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Предметы — SchoolSystem</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Предметы</h1>
+        <div>
+            <span>Студент: <strong th:text="${fullName}">student</strong></span>
+            <a href="/student" class="btn">Назад</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2>Все предметы</h2>
+
+        <div th:if="${error}" class="error-message">
+            <p>Ошибка загрузки данных: <span th:text="${error}"></span></p>
+        </div>
+
+        <div th:if="${subjects != null and !subjects.empty}" class="subjects-grid">
+            <div th:each="subject : ${subjects}" class="subject-card">
+                <h3 th:text="${subject.name}">Математика</h3>
+                <p th:text="${subject.description != null ? subject.description : 'Описание отсутствует'}">Описание предмета</p>
+                <small th:text="'Учителей: ' + ${subject.teachers != null ? subject.teachers.size() : 0}">Учителей: 1</small>
+            </div>
+        </div>
+
+        <div th:if="${subjects == null or subjects.empty}" class="empty-message">
+            <p>Нет доступных предметов</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
