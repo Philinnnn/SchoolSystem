@@ -21,6 +21,12 @@ public class User {
 
     private String fullName;
 
+    @Column(name = "totp_secret")
+    private String totpSecret;
+
+    @Column(name = "totp_enabled")
+    private Boolean totpEnabled = false;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -54,4 +60,12 @@ public class User {
     public Set<Role> getRoles() { return roles; }
 
     public void setRoles(Set<Role> roles) { this.roles = roles; }
+
+    public String getTotpSecret() { return totpSecret; }
+
+    public void setTotpSecret(String totpSecret) { this.totpSecret = totpSecret; }
+
+    public Boolean getTotpEnabled() { return totpEnabled != null ? totpEnabled : false; }
+
+    public void setTotpEnabled(Boolean totpEnabled) { this.totpEnabled = totpEnabled; }
 }

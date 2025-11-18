@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Профиль</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Профиль</h1>
+        <div>
+            <a class="btn" href="/dashboard" style="margin-right: 8px;">На дашборд</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2 th:text="${user.fullName} ?: ${user.username}">User</h2>
+        <p>Логин: <b th:text="${user.username}">username</b></p>
+        <p>Двухфакторная аутентификация: <b th:text="${totpEnabled} ? 'Включена' : 'Выключена'"></b></p>
+        <p>
+            <a class="btn" href="/profile/totp" th:if="${!totpEnabled}">Включить 2FA</a>
+            <a class="btn" href="/profile/totp" th:if="${totpEnabled}">Управление 2FA</a>
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>Смена пароля</h2>
+        <div class="success-message" th:if="${passwordChangeSuccess}" th:text="${passwordChangeSuccess}"></div>
+        <div class="error-message" th:if="${passwordChangeError}" th:text="${passwordChangeError}"></div>
+        <form method="post" th:action="@{/profile/password}">
+            <div>
+                <label>Текущий пароль</label>
+                <input class="input" type="password" name="currentPassword" minlength="1" required>
+            </div>
+            <div>
+                <label>Новый пароль</label>
+                <input class="input" type="password" name="newPassword" minlength="6" required>
+            </div>
+            <div>
+                <label>Подтверждение пароля</label>
+                <input class="input" type="password" name="confirmPassword" minlength="6" required>
+            </div>
+            <button class="btn" type="submit">Изменить пароль</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>
+

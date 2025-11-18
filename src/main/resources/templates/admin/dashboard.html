@@ -12,6 +12,7 @@
         <h1>Панель администратора</h1>
         <div>
             <span>Добро пожаловать, <strong th:text="${username}">admin</strong></span>
+            <a class="btn" href="/profile" style="margin: 0 8px;">Кабинет</a>
             <form method="post" th:action="@{/logout}" style="display: inline;">
                 <button class="btn" type="submit">Выйти</button>
             </form>

@@ -1,5 +1,7 @@
 package kz.kstu.fit.batyrkhanov.schoolsystem.security;
 
+import kz.kstu.fit.batyrkhanov.schoolsystem.repository.UserRepository;
+import kz.kstu.fit.batyrkhanov.schoolsystem.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -8,13 +10,17 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
-
+    @Bean
+    public TotpVerificationFilter totpVerificationFilter(UserRepository userRepository) {
+        return new TotpVerificationFilter(userRepository);
+    }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, TotpVerificationFilter totpVerificationFilter) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
@@ -40,6 +46,8 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
+
+        http.addFilterAfter(totpVerificationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
