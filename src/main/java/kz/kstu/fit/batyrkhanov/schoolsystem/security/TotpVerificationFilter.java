@@ -20,7 +20,10 @@ public class TotpVerificationFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
 
     private static final Set<String> WHITELIST = Set.of(
-            "/login", "/logout", "/auth/totp", "/auth/totp/verify", "/error"
+            "/login", "/logout",
+            "/login/telegram", "/login/telegram/",
+            "/login/telegram/start", "/login/telegram/request/status", "/login/telegram/consume",
+            "/auth/totp", "/auth/totp/verify", "/error"
     );
 
     public TotpVerificationFilter(UserRepository userRepository) {

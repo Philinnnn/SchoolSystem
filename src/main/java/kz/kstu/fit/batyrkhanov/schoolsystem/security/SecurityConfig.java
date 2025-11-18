@@ -1,7 +1,6 @@
 package kz.kstu.fit.batyrkhanov.schoolsystem.security;
 
 import kz.kstu.fit.batyrkhanov.schoolsystem.repository.UserRepository;
-import kz.kstu.fit.batyrkhanov.schoolsystem.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,7 +25,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // Разрешённые страницы и статические ресурсы
-                        .requestMatchers("/", "/login", "/css/**", "/js/**", "/favicon.ico", "/error").permitAll()
+                        .requestMatchers("/", "/login", "/login/telegram/**", "/css/**", "/js/**", "/favicon.ico", "/error").permitAll()
+                        .requestMatchers("/login/telegram/start", "/login/telegram/request/status", "/login/telegram/consume").permitAll()
 
                         // Роли
                         .requestMatchers("/admin/**").hasRole("ADMIN")

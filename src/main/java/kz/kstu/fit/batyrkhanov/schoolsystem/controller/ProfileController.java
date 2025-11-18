@@ -6,6 +6,7 @@ import kz.kstu.fit.batyrkhanov.schoolsystem.repository.UserRepository;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.QrCodeService;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.TotpService;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.UserService;
+import kz.kstu.fit.batyrkhanov.schoolsystem.service.TelegramAuthService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,12 +27,18 @@ public class ProfileController {
     private final UserRepository userRepository;
     private final TotpService totpService;
     private final QrCodeService qrCodeService;
+    private final TelegramAuthService telegramAuthService;
 
-    public ProfileController(UserService userService, UserRepository userRepository, TotpService totpService, QrCodeService qrCodeService) {
+    public ProfileController(UserService userService,
+                             UserRepository userRepository,
+                             TotpService totpService,
+                             QrCodeService qrCodeService,
+                             TelegramAuthService telegramAuthService) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.totpService = totpService;
         this.qrCodeService = qrCodeService;
+        this.telegramAuthService = telegramAuthService;
     }
 
     @GetMapping
@@ -41,7 +48,31 @@ public class ProfileController {
         model.addAttribute("passwordChangeSuccess", null);
         model.addAttribute("passwordChangeError", null);
         model.addAttribute("totpEnabled", user != null && Boolean.TRUE.equals(user.getTotpEnabled()));
+        if (user != null && user.getTelegramId() != null) {
+            model.addAttribute("telegramLinked", true);
+        } else {
+            model.addAttribute("telegramLinked", false);
+            model.addAttribute("telegramLinkCode", user != null ? telegramAuthService.ensureLinkCode(user) : null);
+        }
         return "profile/index";
+    }
+
+    @PostMapping("/telegram/regenerate")
+    public String regenerateTelegramCode(@AuthenticationPrincipal UserDetails principal) {
+        User user = userRepository.findByUsername(principal.getUsername());
+        if (user != null && user.getTelegramId() == null) {
+            telegramAuthService.generateLinkCode(user);
+        }
+        return "redirect:/profile";
+    }
+
+    @PostMapping("/telegram/unlink")
+    public String unlinkTelegram(@AuthenticationPrincipal UserDetails principal) {
+        User user = userRepository.findByUsername(principal.getUsername());
+        if (user != null && user.getTelegramId() != null) {
+            telegramAuthService.unbindTelegram(user);
+        }
+        return "redirect:/profile";
     }
 
     @PostMapping("/password")
@@ -67,6 +98,10 @@ public class ProfileController {
             model.addAttribute("passwordChangeError", "Текущий пароль неверный.");
         }
         model.addAttribute("totpEnabled", user != null && Boolean.TRUE.equals(user.getTotpEnabled()));
+        model.addAttribute("telegramLinked", user != null && user.getTelegramId() != null);
+        if (user != null && user.getTelegramId() == null) {
+            model.addAttribute("telegramLinkCode", telegramAuthService.ensureLinkCode(user));
+        }
         return "profile/index";
     }
 

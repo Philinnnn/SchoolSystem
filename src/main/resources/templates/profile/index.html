@@ -47,7 +47,25 @@
             <button class="btn" type="submit">Изменить пароль</button>
         </form>
     </div>
+
+    <div class="card">
+        <h2>Telegram</h2>
+        <div th:if="${telegramLinked}">
+            <p>Статус: <b>привязан</b></p>
+            <form method="post" th:action="@{/profile/telegram/unlink}">
+                <button class="btn" type="submit">Отвязать Telegram</button>
+            </form>
+        </div>
+        <div th:if="${!telegramLinked}">
+            <p>Статус: <b>не привязан</b></p>
+            <p>Чтобы привязать, откройте бота и отправьте команду:<br>
+                <code th:text="' /link ' + ${telegramLinkCode}">/link ABCD1234</code>
+            </p>
+            <form method="post" th:action="@{/profile/telegram/regenerate}">
+                <button class="btn" type="submit">Обновить код</button>
+            </form>
+        </div>
+    </div>
 </div>
 </body>
 </html>
-

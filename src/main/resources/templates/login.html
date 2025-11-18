@@ -4,29 +4,139 @@
     <meta charset="UTF-8">
     <title>Вход — SchoolSystem</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Локальные переменные темы для страницы логина */
+        body.login-page {
+            --bg-grad-1: #11998e;      /* по умолчанию — зелёная тема */
+            --bg-grad-2: #38ef7d;
+            --accent-1: #11998e;
+            --accent-2: #38ef7d;
+            --accent-shadow: 17, 153, 142; /* rgb без альфы для теней */
+            --accent-text-on: #ffffff;
+            --muted-text: #666;
+            transition: background 0.6s ease, background-color 0.6s ease, color 0.3s ease;
+            background: linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%) !important; /* перекрываем глобальный */
+        }
+
+        /* Небесно-голубая тема */
+        body.login-page.theme-sky {
+            --bg-grad-1: #87cefa; /* LightSkyBlue */
+            --bg-grad-2: #2a62c5; /* насыщенный небесно-голубой */
+            --accent-1: #2a62c5;
+            --accent-2: #6db6ff; /* светлее для градиента кнопок */
+            --accent-shadow: 42, 98, 197;
+        }
+
+        /* Переопределения визуала под тему (только на странице логина) */
+        body.login-page .card h2 { color: #2c3e50; }
+        body.login-page .hint { font-size: 0.9em; color: var(--muted-text); }
+
+        /* Слайдер-вкладки (полноширинный переключатель) */
+        .tabs { position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; width: 100%; height: 48px; border-radius: 10px; background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35), 0 6px 16px rgba(0,0,0,0.08); margin-bottom: 12px; overflow: hidden; }
+        .tabs .thumb { position: absolute; top: 3px; left: 3px; width: calc(50% - 3px); height: calc(100% - 6px); border-radius: 8px; background: #fff; box-shadow: 0 6px 16px rgba(0,0,0,0.15); transition: left 0.35s ease; z-index: 1; }
+        .tabs.right .thumb { left: calc(50% + 0px); }
+        .tab { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; padding: 0 10px; cursor: pointer; color: rgba(255,255,255,0.95); font-weight: 600; user-select: none; }
+        .tab.active { color: #2c3e50; }
+        .hidden { display:none; }
+        .hint { font-size:0.9em; color:#666; }
+
+        /* Кнопки на странице логина — градиент от переменных с плавной анимацией */
+        body.login-page .btn {
+            background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%) !important;
+            box-shadow: 0 4px 15px rgba(var(--accent-shadow), 0.30) !important;
+            transition: background 0.6s ease, box-shadow 0.3s ease, transform 0.15s ease;
+        }
+        body.login-page .btn:hover { box-shadow: 0 6px 22px rgba(var(--accent-shadow), 0.40) !important; }
+
+        /* Инпуты: подсветка фокуса в цвет темы */
+        body.login-page .input:focus {
+            border-color: var(--accent-1) !important;
+            box-shadow: 0 0 0 3px rgba(var(--accent-shadow), 0.15) !important;
+        }
+
+        /* Адаптив: уменьшить высоту на малых экранах */
+        @media (max-width: 420px) { .tabs { height: 44px; } }
+    </style>
 </head>
-<body>
+<body class="login-page">
 
 <div class="center-container">
     <div class="card">
         <h2>Вход в систему</h2>
 
-        <div th:if="${param.error}" class="error-message">
-            Неверный логин или пароль
+        <div th:if="${param.error}" class="error-message">Неверный логин или пароль</div>
+        <div th:if="${param.logout}" class="success-message">Вы успешно вышли из системы</div>
+        <div th:if="${tgError}" class="error-message" th:text="${tgError}"></div>
+
+        <div id="tabs" class="tabs" role="tablist" aria-label="Способ входа">
+            <div class="thumb" aria-hidden="true"></div>
+            <div id="tab-pass" class="tab active" role="tab" aria-selected="true" tabindex="0" onclick="sel('pass')">По паролю</div>
+            <div id="tab-tg" class="tab" role="tab" aria-selected="false" tabindex="-1" onclick="sel('tg')">Через Telegram</div>
         </div>
 
-        <div th:if="${param.logout}" class="success-message">
-            Вы успешно вышли из системы
+        <div id="pane-pass">
+            <form method="post" th:action="@{/login}">
+                <input class="input" type="text" name="username" placeholder="Логин" aria-label="Логин" required>
+                <input class="input" type="password" name="password" placeholder="Пароль" aria-label="Пароль" required>
+                <button class="btn" type="submit">Войти</button>
+            </form>
         </div>
 
-        <form method="post" action="/login" th:action="@{/login}">
-            <input class="input" type="text" name="username" placeholder="Логин" required>
-            <input class="input" type="password" name="password" placeholder="Пароль" required>
-
-            <button class="btn" type="submit">Войти</button>
-        </form>
+        <div id="pane-tg" class="hidden">
+            <p class="hint">Бот: <b th:text="${telegramBotUsername} ?: 'twofactortgbot'"></b>. Нажмите кнопку ниже — вам придёт запрос в Telegram, подтвердите вход.</p>
+            <form method="post" th:action="@{/login/telegram/start}">
+                <input class="input" type="text" name="username" placeholder="Логин" aria-label="Логин" required>
+                <button class="btn" type="submit">Войти (подтверждение в Telegram)</button>
+            </form>
+        </div>
     </div>
 </div>
 
+<script>
+    function sel(which){
+        const tabs = document.getElementById('tabs');
+        const tp = document.getElementById('tab-pass');
+        const tt = document.getElementById('tab-tg');
+        const pp = document.getElementById('pane-pass');
+        const pt = document.getElementById('pane-tg');
+        const body = document.body;
+        if(which==='tg'){
+            // Активируем Telegram
+            tabs.classList.add('right');
+            tt.classList.add('active'); tt.setAttribute('aria-selected','true'); tt.setAttribute('tabindex','0');
+            tp.classList.remove('active'); tp.setAttribute('aria-selected','false'); tp.setAttribute('tabindex','-1');
+            pt.classList.remove('hidden'); pp.classList.add('hidden');
+            // Автосмена темы на небесно-голубую
+            body.classList.add('theme-sky');
+        } else {
+            // Активируем вход по паролю
+            tabs.classList.remove('right');
+            tp.classList.add('active'); tp.setAttribute('aria-selected','true'); tp.setAttribute('tabindex','0');
+            tt.classList.remove('active'); tt.setAttribute('aria-selected','false'); tt.setAttribute('tabindex','-1');
+            pp.classList.remove('hidden'); pt.classList.add('hidden');
+            // Возврат темы по умолчанию
+            body.classList.remove('theme-sky');
+        }
+    }
+
+    // Управление стрелками/клавишами для доступности
+    (function(){
+        const tp = document.getElementById('tab-pass');
+        const tt = document.getElementById('tab-tg');
+        function keyNav(el){
+            el.addEventListener('keydown', function(e){
+                if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+                    e.preventDefault();
+                    (el === tp ? tt : tp).focus();
+                    sel(el === tp ? 'tg' : 'pass');
+                } else if(e.key === 'Enter' || e.key === ' '){
+                    e.preventDefault();
+                    sel(el === tp ? 'pass' : 'tg');
+                }
+            });
+        }
+        keyNav(tp); keyNav(tt);
+    })();
+</script>
 </body>
 </html>

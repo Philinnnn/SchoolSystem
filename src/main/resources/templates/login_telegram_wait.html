@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Подтверждение входа — Telegram</title>
+    <style>
+        body { margin:0; font-family: Arial, sans-serif; background:#e6f2ff; color:#0b3d91; }
+        .center { display:flex; align-items:center; justify-content:center; height:100vh; }
+        .card { background:#ffffff; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,0.1); padding:28px 32px; max-width:520px; width:92%; }
+        .title { margin:0 0 10px; font-size:22px; }
+        .subtitle { margin:0 0 18px; color:#2a62c5; }
+        .spinner { width:42px; height:42px; border:4px solid #b3d1ff; border-top-color:#2a62c5; border-radius:50%; animation:spin 1s linear infinite; margin:18px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .muted { color:#5a7fc1; font-size:13px; }
+        .actions { margin-top:16px; display:flex; gap:10px; justify-content:center; }
+        .btn { background:#2a62c5; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; text-decoration:none; }
+        .btn.secondary { background:#9dbaf2; color:#0b3d91; }
+        code { background:#eef5ff; padding:2px 6px; border-radius:4px; }
+    </style>
+</head>
+<body>
+<div class="center">
+    <div class="card">
+        <h1 class="title">Ожидание подтверждения входа</h1>
+        <p class="subtitle">Откройте Telegram и подтвердите запрос — сообщение с кнопками уже отправлено.</p>
+        <div class="spinner"></div>
+        <p class="muted">Если вы не видите сообщение, убедитесь, что аккаунт привязан к боту и уведомления включены.</p>
+        <form id="consumeForm" th:action="@{/login/telegram/consume}" method="post" style="display:none;">
+            <input type="hidden" name="id" th:value="${requestId}">
+        </form>
+        <div id="statusMsg" class="muted"></div>
+        <div class="actions">
+            <a class="btn secondary" href="/login">Назад ко входу</a>
+        </div>
+    </div>
+</div>
+<script>
+    (function(){
+        const requestId = "[[${requestId}]]";
+        const statusMsg = document.getElementById('statusMsg');
+        const consumeForm = document.getElementById('consumeForm');
+        let attempts = 0;
+        const poll = async () => {
+            try {
+                const r = await fetch(`/login/telegram/request/status?id=${encodeURIComponent(requestId)}`, { cache: 'no-store' });
+                const txt = await r.text();
+                const m = txt.match(/"status"\s*:\s*"([A-Z_]+)"/);
+                const status = m ? m[1] : 'UNKNOWN';
+                if (status === 'APPROVED') {
+                    consumeForm.submit();
+                    return;
+                }
+                if (status === 'DECLINED') {
+                    statusMsg.textContent = 'Запрос отклонён. Вернитесь и попробуйте снова.';
+                    return;
+                }
+                if (status === 'EXPIRED' || status === 'NOT_FOUND') {
+                    statusMsg.textContent = 'Запрос истёк. Вернитесь и создайте новый.';
+                    return;
+                }
+                attempts++;
+                if (attempts < 120) { // ~4 минуты при 2с интервале
+                    setTimeout(poll, 2000);
+                } else {
+                    statusMsg.textContent = 'Время ожидания истекло. Попробуйте ещё раз.';
+                }
+            } catch (e) {
+                attempts++;
+                if (attempts < 10) setTimeout(poll, 3000);
+                else statusMsg.textContent = 'Ошибка связи. Обновите страницу или попробуйте позже.';
+            }
+        };
+        poll();
+    })();
+</script>
+</body>
+</html>
+

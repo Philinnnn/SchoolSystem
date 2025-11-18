@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Подтверждение входа — 2FA</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="center-container">
+    <div class="card">
+        <h2>Введите код аутентификатора</h2>
+        <div th:if="${error}" class="error-message" th:text="${error}"></div>
+        <form method="post" th:action="@{/auth/totp/verify}">
+            <input class="input" type="text" name="code" pattern="\d{6}" placeholder="6-значный код" required>
+            <button class="btn" type="submit">Подтвердить</button>
+        </form>
+        <p><a href="/logout">Выйти</a></p>
+    </div>
+</div>
+</body>
+</html>
+

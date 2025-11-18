@@ -2,6 +2,7 @@ package kz.kstu.fit.batyrkhanov.schoolsystem.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,6 +28,18 @@ public class User {
     @Column(name = "totp_enabled")
     private Boolean totpEnabled = false;
 
+    @Column(name = "telegram_id")
+    private Long telegramId;
+
+    @Column(name = "telegram_link_code")
+    private String telegramLinkCode;
+
+    @Column(name = "password_reset_token")
+    private String passwordResetToken; // используем также как код входа через Telegram
+
+    @Column(name = "password_reset_expiry")
+    private LocalDateTime passwordResetExpiry; // используем как время истечения кода
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -41,31 +54,27 @@ public class User {
         this.fullName = fullName;
     }
 
+    // getters / setters
     public Long getId() { return id; }
-
     public void setId(Long id) { this.id = id; }
-
     public String getUsername() { return username; }
-
     public void setUsername(String username) { this.username = username; }
-
     public String getPassword() { return password; }
-
     public void setPassword(String password) { this.password = password; }
-
     public String getFullName() { return fullName; }
-
     public void setFullName(String fullName) { this.fullName = fullName; }
-
     public Set<Role> getRoles() { return roles; }
-
     public void setRoles(Set<Role> roles) { this.roles = roles; }
-
     public String getTotpSecret() { return totpSecret; }
-
     public void setTotpSecret(String totpSecret) { this.totpSecret = totpSecret; }
-
     public Boolean getTotpEnabled() { return totpEnabled != null ? totpEnabled : false; }
-
     public void setTotpEnabled(Boolean totpEnabled) { this.totpEnabled = totpEnabled; }
+    public Long getTelegramId() { return telegramId; }
+    public void setTelegramId(Long telegramId) { this.telegramId = telegramId; }
+    public String getTelegramLinkCode() { return telegramLinkCode; }
+    public void setTelegramLinkCode(String telegramLinkCode) { this.telegramLinkCode = telegramLinkCode; }
+    public String getPasswordResetToken() { return passwordResetToken; }
+    public void setPasswordResetToken(String passwordResetToken) { this.passwordResetToken = passwordResetToken; }
+    public LocalDateTime getPasswordResetExpiry() { return passwordResetExpiry; }
+    public void setPasswordResetExpiry(LocalDateTime passwordResetExpiry) { this.passwordResetExpiry = passwordResetExpiry; }
 }
