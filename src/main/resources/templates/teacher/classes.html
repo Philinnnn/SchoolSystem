@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Мои классы — SchoolSystem</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Мои классы</h1>
+        <div>
+            <a href="/teacher" class="btn">Панель</a>
+            <a href="/teacher/schedule" class="btn">Расписание</a>
+            <a href="/teacher/subjects" class="btn">Предметы</a>
+            <span>Учитель: <strong th:text="${fullName}">teacher</strong></span>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <div th:if="${error}" class="error-message">
+            <p th:text="${error}">Ошибка</p>
+        </div>
+        <h2>Классы, где вы ведёте уроки</h2>
+        <ul class="list" th:if="${classes != null and !#lists.isEmpty(classes)}">
+            <li th:each="c : ${classes}">
+                <span th:text="${c}">10А</span>
+                <a class="btn" th:href="@{/teacher/students(className=${c})}">Открыть</a>
+            </li>
+        </ul>
+        <div th:if="${classes == null or #lists.isEmpty(classes)}" class="empty-message">
+            <p>Пока нет назначенных классов</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

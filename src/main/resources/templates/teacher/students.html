@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Студенты класса — SchoolSystem</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Студенты класса <span th:text="${className}">Класс</span></h1>
+        <div>
+            <a th:href="@{/teacher/classes}" class="btn">Классы</a>
+            <a th:href="@{/teacher/schedule}" class="btn">Расписание</a>
+            <a th:href="@{/teacher/subjects}" class="btn">Предметы</a>
+            <span>Учитель: <strong th:text="${fullName}">teacher</strong></span>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <div th:if="${success}" class="success-message">
+            <p th:text="${success}">Операция выполнена</p>
+        </div>
+        <div th:if="${error}" class="error-message">
+            <p th:text="${error}">Ошибка</p>
+        </div>
+        <h2>Список студентов</h2>
+        <table class="table" th:if="${students != null and !students.empty}">
+            <thead>
+            <tr>
+                <th>ФИО</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="st : ${students}">
+                <td th:text="${st.user != null ? st.user.fullName : ('ID ' + st.id)}">Иван Петров</td>
+                <td>
+                    <form method="post" th:action="@{/teacher/grades}">
+                        <input type="hidden" name="studentId" th:value="${st.id}">
+                        <input type="hidden" name="className" th:value="${className}">
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <label>Оценка:
+                                <select name="grade" required>
+                                    <option value="5">5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                    <option value="1">1</option>
+                                </select>
+                            </label>
+                            <label>Предмет:
+                                <select name="subjectId" required>
+                                    <option th:each="subj : ${subjects}" th:value="${subj.id}" th:text="${subj.name}">Математика</option>
+                                </select>
+                            </label>
+                            <label>Дата:
+                                <input type="date" name="date" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                            </label>
+                            <button class="btn" type="submit">Поставить</button>
+                        </div>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div th:if="${students == null or students.empty}" class="empty-message">
+            <p>В этом классе пока нет студентов</p>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+        <h2>Оценки по классу</h2>
+        <table class="table" th:if="${grades != null and !grades.empty}">
+            <thead>
+            <tr>
+                <th>Студент</th>
+                <th>Предмет</th>
+                <th>Оценка</th>
+                <th>Дата</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="g : ${grades}">
+                <td th:text="${g.student.user != null ? g.student.user.fullName : ('ID ' + g.student.id)}">Студент</td>
+                <td>
+                    <form th:action="@{'/teacher/grades/' + ${g.id} + '/update'}" method="post" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <input type="hidden" name="className" th:value="${className}">
+                        <select name="subjectId">
+                            <option th:each="subj : ${subjects}"
+                                    th:value="${subj.id}"
+                                    th:selected="${g.subject != null} ? ${subj.id} == ${g.subject.id} : false"
+                                    th:text="${subj.name}">Математика</option>
+                        </select>
+                        <select name="grade">
+                            <option th:selected="${g.grade == 5}" value="5">5</option>
+                            <option th:selected="${g.grade == 4}" value="4">4</option>
+                            <option th:selected="${g.grade == 3}" value="3">3</option>
+                            <option th:selected="${g.grade == 2}" value="2">2</option>
+                            <option th:selected="${g.grade == 1}" value="1">1</option>
+                        </select>
+                        <input type="date" name="date" th:value="${g.gradeDate != null ? #temporals.format(g.gradeDate, 'yyyy-MM-dd') : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                        <button class="btn" type="submit">Сохранить</button>
+                    </form>
+                </td>
+                <td><!-- колонка оценка уже в форме выше --></td>
+                <td><!-- колонка дата уже в форме выше --></td>
+                <td>
+                    <form th:action="@{'/teacher/grades/' + ${g.id} + '/delete'}" method="post" onsubmit="return confirm('Удалить оценку?');">
+                        <input type="hidden" name="className" th:value="${className}">
+                        <button class="btn" type="submit">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div th:if="${grades == null or grades.empty}" class="empty-message">
+            <p>Оценок по этому классу пока нет</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

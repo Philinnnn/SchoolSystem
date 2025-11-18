@@ -23,5 +23,24 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
            "WHERE s.className = :className " +
            "ORDER BY s.dayOfWeek ASC, s.startTime ASC")
     List<Schedule> findByClassNameWithDetails(@Param("className") String className);
-}
 
+    @Query("SELECT s FROM Schedule s " +
+           "JOIN FETCH s.subject " +
+           "JOIN FETCH s.teacher t " +
+           "JOIN FETCH t.user " +
+           "WHERE t.id = :teacherId " +
+           "ORDER BY s.dayOfWeek ASC, s.startTime ASC")
+    List<Schedule> findByTeacherIdWithDetails(@Param("teacherId") Long teacherId);
+
+    @Query("SELECT DISTINCT s.className FROM Schedule s WHERE s.teacher.id = :teacherId ORDER BY s.className ASC")
+    List<String> findDistinctClassNamesByTeacherId(@Param("teacherId") Long teacherId);
+
+    @Query("SELECT DISTINCT s.className FROM Schedule s ORDER BY s.className ASC")
+    List<String> findDistinctClassNamesGlobal();
+
+    @Query("SELECT COUNT(s) > 0 FROM Schedule s WHERE s.teacher.id = :teacherId AND s.subject.id = :subjectId AND s.className = :className AND s.dayOfWeek = :dow")
+    boolean existsLessonForTeacherSubjectClassOnDay(@Param("teacherId") Long teacherId,
+                                                    @Param("subjectId") Long subjectId,
+                                                    @Param("className") String className,
+                                                    @Param("dow") DayOfWeek dayOfWeek);
+}

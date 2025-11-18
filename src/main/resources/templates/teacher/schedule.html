@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Моё расписание — SchoolSystem</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Моё расписание</h1>
+        <div>
+            <a href="/teacher" class="btn">Панель</a>
+            <a href="/teacher/classes" class="btn">Классы</a>
+            <a href="/teacher/subjects" class="btn">Предметы</a>
+            <span>Учитель: <strong th:text="${fullName}">teacher</strong></span>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <div th:if="${error}" class="error-message">
+            <p th:text="${error}">Ошибка</p>
+        </div>
+        <h2>Список занятий</h2>
+        <table class="table wide" th:if="${schedules != null and !schedules.empty}">
+            <thead>
+            <tr>
+                <th>День</th>
+                <th>Время</th>
+                <th>Предмет</th>
+                <th>Класс</th>
+                <th>Кабинет</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${schedules}" th:class="${'day-' + s.dayOfWeek}">
+                <td>
+                    <span th:switch="${s.dayOfWeek}">
+                        <span th:case="${T(java.time.DayOfWeek).MONDAY}">Понедельник</span>
+                        <span th:case="${T(java.time.DayOfWeek).TUESDAY}">Вторник</span>
+                        <span th:case="${T(java.time.DayOfWeek).WEDNESDAY}">Среда</span>
+                        <span th:case="${T(java.time.DayOfWeek).THURSDAY}">Четверг</span>
+                        <span th:case="${T(java.time.DayOfWeek).FRIDAY}">Пятница</span>
+                        <span th:case="${T(java.time.DayOfWeek).SATURDAY}">Суббота</span>
+                        <span th:case="${T(java.time.DayOfWeek).SUNDAY}">Воскресенье</span>
+                        <span th:case="*" th:text="${s.dayOfWeek}">День</span>
+                    </span>
+                </td>
+                <td th:text="${s.startTime} + ' — ' + ${s.endTime}">08:00 — 08:45</td>
+                <td th:text="${s.subject.name}">Математика</td>
+                <td th:text="${s.className}">10А</td>
+                <td th:text="${s.roomNumber != null ? s.roomNumber : '-'}">101</td>
+            </tr>
+            </tbody>
+        </table>
+        <div th:if="${schedules == null or schedules.empty}" class="empty-message">
+            <p>Расписание пусто</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
