@@ -570,3 +570,30 @@ header .btn {
     font-size: 13px;
     box-shadow: none;
 }
+
+.password-toggle { width:32px; height:32px; display:flex; align-items:center; justify-content:center; top:40%; transform:translateY(-50%); }
+.password-toggle .eye { width:20px; height:12px; border:2px solid #2c3e50; border-radius:50%/60%; position:relative; transition:all .25s ease; }
+.password-toggle .eye:after { content:''; position:absolute; width:6px; height:6px; background:#2c3e50; border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); transition:all .25s ease; }
+.password-toggle.closed .eye:after { background:#11998e; }
+.password-toggle .slash { position:absolute; width:24px; height:2px; background:#c0392b; transform:rotate(35deg); opacity:0; transition:opacity .25s ease; }
+.password-toggle.closed .slash { opacity:1; }
+.password-toggle.open .slash { opacity:0; }
+.password-toggle:hover .eye { border-color:#11998e; }
+.password-toggle.open .eye { box-shadow:0 0 4px rgba(17,153,142,.4); }
+
+.policy-hints { list-style:none; margin:6px 0 10px 0; padding:0; font-size:12px; color:#7f8c8d; display:grid; gap:4px; }
+.policy-hints li { position:relative; padding-left:18px; }
+.policy-hints li:before { content:'✗'; position:absolute; left:0; top:0; color:#c0392b; }
+.policy-hints li.ok { color:#155724; }
+.policy-hints li.ok:before { content:'✓'; color:#155724; }
+
+.pw-field { margin-bottom:18px; }
+.pw-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.password-toggle.left { position:static; transform:none; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:8px; border:1px solid #ecf0f1; }
+.password-toggle.left svg { width:26px; height:26px; }
+.password-toggle.left.open { background:#e8f9f6; border-color:#11998e; }
+.password-toggle.left:hover { border-color:#11998e; }
+.password-toggle.left .icon-eye-open { display:none; }
+.password-toggle.left .icon-eye-closed { display:none; }
+.password-toggle.left.closed .icon-eye-closed { display:block; color:#2c3e50; }
+.password-toggle.left.open .icon-eye-open { display:block; color:#11998e; }

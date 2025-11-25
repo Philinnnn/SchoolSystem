@@ -9,6 +9,7 @@ import kz.kstu.fit.batyrkhanov.schoolsystem.service.TotpService;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.UserService;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.TelegramAuthService;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.AuditService; // добавлено
+import kz.kstu.fit.batyrkhanov.schoolsystem.util.PasswordPolicy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -85,16 +86,27 @@ public class ProfileController {
                                  @RequestParam String currentPassword,
                                  @RequestParam String newPassword,
                                  @RequestParam String confirmPassword,
-                                 Model model,
-                                 HttpServletRequest request) { // добавлен request
+                                 Model model) {
         User user = userRepository.findByUsername(principal.getUsername());
         model.addAttribute("user", user);
-        if (!StringUtils.hasText(newPassword) || newPassword.length() < 6) {
-            model.addAttribute("passwordChangeError", "Новый пароль должен быть не короче 6 символов.");
+        // Новая политика пароля
+        String violation = PasswordPolicy.violationMessage(newPassword);
+        if (violation != null) {
+            model.addAttribute("passwordChangeError", violation + ". Требования: минимум 8 символов, строчная и заглавная латинская буква, цифра и спецсимвол.");
+            model.addAttribute("totpEnabled", user != null && Boolean.TRUE.equals(user.getTotpEnabled()));
+            model.addAttribute("telegramLinked", user != null && user.getTelegramId() != null);
+            if (user != null && user.getTelegramId() == null) {
+                model.addAttribute("telegramLinkCode", telegramAuthService.ensureLinkCode(user));
+            }
             return "profile/index";
         }
         if (!newPassword.equals(confirmPassword)) {
             model.addAttribute("passwordChangeError", "Пароли не совпадают.");
+            model.addAttribute("totpEnabled", user != null && Boolean.TRUE.equals(user.getTotpEnabled()));
+            model.addAttribute("telegramLinked", user != null && user.getTelegramId() != null);
+            if (user != null && user.getTelegramId() == null) {
+                model.addAttribute("telegramLinkCode", telegramAuthService.ensureLinkCode(user));
+            }
             return "profile/index";
         }
         boolean ok = userService.changePassword(principal.getUsername(), currentPassword, newPassword);
@@ -151,8 +163,7 @@ public class ProfileController {
     public String enableTotp(@AuthenticationPrincipal UserDetails principal,
                              HttpSession session,
                              @RequestParam("code") String code,
-                             Model model,
-                             HttpServletRequest request) { // добавлен request
+                             Model model) {
         String secret = (String) session.getAttribute(SESSION_TOTP_SETUP_SECRET);
         if (!StringUtils.hasText(secret)) {
             return "redirect:/profile/totp";

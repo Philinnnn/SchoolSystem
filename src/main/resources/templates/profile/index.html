@@ -31,20 +31,35 @@
         <h2>Смена пароля</h2>
         <div class="success-message" th:if="${passwordChangeSuccess}" th:text="${passwordChangeSuccess}"></div>
         <div class="error-message" th:if="${passwordChangeError}" th:text="${passwordChangeError}"></div>
-        <form method="post" th:action="@{/profile/password}">
+        <form method="post" th:action="@{/profile/password}" id="password-change-form">
             <div>
                 <label>Текущий пароль</label>
-                <input class="input" type="password" name="currentPassword" minlength="1" required>
+                <input class="input" type="password" name="currentPassword" minlength="1" required id="currentPassword">
             </div>
-            <div>
-                <label>Новый пароль</label>
-                <input class="input" type="password" name="newPassword" minlength="6" required>
+            <div class="pw-field">
+                <div class="pw-header">
+                    <button type="button" class="password-toggle closed left" onclick="togglePw('newPassword', this)" aria-label="Показать/скрыть пароль">
+                        <svg class="icon-eye-open" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M1 12C3.5 6.5 8 4 12 4s8.5 2.5 11 8c-2.5 5.5-7 8-11 8s-8.5-2.5-11-8Z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        <svg class="icon-eye-closed" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M1 12C3.5 6.5 8 4 12 4c2.2 0 4.3.6 6.2 1.8" />
+                            <path d="M23 12c-2.5 5.5-7 8-11 8a11.6 11.6 0 0 1-6.2-1.8" />
+                            <circle cx="12" cy="12" r="3" />
+                            <line x1="4" y1="4" x2="20" y2="20" />
+                        </svg>
+                    </button>
+                    <label for="newPassword">Новый пароль</label>
+                </div>
+                <input class="input" type="password" name="newPassword" minlength="8" required id="newPassword">
+                <div id="pwPolicyMsg" style="color:#c0392b; font-size:12px; margin-top:-10px; display:none;"></div>
             </div>
             <div>
                 <label>Подтверждение пароля</label>
-                <input class="input" type="password" name="confirmPassword" minlength="6" required>
+                <input class="input" type="password" name="confirmPassword" minlength="8" required id="confirmPassword">
             </div>
-            <button class="btn" type="submit">Изменить пароль</button>
+            <button class="btn" type="submit" id="pwSubmit" disabled>Изменить пароль</button>
         </form>
     </div>
 
@@ -67,5 +82,52 @@
         </div>
     </div>
 </div>
+<script>
+function togglePw(id, btn){
+    const inp = document.getElementById(id);
+    if(inp.type === 'password'){
+        inp.type = 'text';
+        btn.classList.remove('closed');
+        btn.classList.add('open');
+    } else {
+        inp.type = 'password';
+        btn.classList.remove('open');
+        btn.classList.add('closed');
+    }
+}
+(function(){
+    const newPw = document.getElementById('newPassword');
+    const confirmPw = document.getElementById('confirmPassword');
+    const msg = document.getElementById('pwPolicyMsg');
+    const submitBtn = document.getElementById('pwSubmit');
+    function validate(){
+        const v = newPw.value;
+        const violations = [];
+        if(v.length < 8) violations.push('минимум 8 символов');
+        if(!/[a-z]/.test(v)) violations.push('нет строчной латинской буквы');
+        if(!/[A-Z]/.test(v)) violations.push('нет заглавной латинской буквы');
+        if(!/[0-9]/.test(v)) violations.push('нет цифры');
+        if(!/[^A-Za-z0-9]/.test(v)) violations.push('нет спецсимвола');
+        let mismatch = false;
+        if(confirmPw.value && v !== confirmPw.value) mismatch = true;
+        if(violations.length){
+            msg.style.display = 'block';
+            msg.textContent = 'Пароль не соответствует требованиям: ' + violations.join(', ');
+        } else if(mismatch){
+            msg.style.display = 'block';
+            msg.textContent = 'Пароли не совпадают';
+        } else if(v){
+            msg.style.display = 'none';
+            msg.textContent = '';
+        } else {
+            msg.style.display = 'none';
+            msg.textContent = '';
+        }
+        submitBtn.disabled = !(violations.length === 0 && !mismatch && v.length > 0);
+    }
+    newPw.addEventListener('input', validate);
+    confirmPw.addEventListener('input', validate);
+})();
+</script>
 </body>
 </html>

@@ -96,6 +96,9 @@
                                     th:selected="${g.subject != null and subj.id == g.subject.id}"
                                     th:text="${subj.name}">Математика</option>
                         </select>
+                        <div class="current-grade-info" style="font-size:12px; color:#7f8c8d; margin-top:4px;">
+                            Текущая оценка: <span th:text="${g.grade}">5</span>, дата: <span th:text="${g.gradeDate != null ? #temporals.format(g.gradeDate,'dd.MM.yyyy') : '-'}">01.01.2025</span>
+                        </div>
                     </form>
                 </td>
                 <td>
