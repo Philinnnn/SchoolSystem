@@ -62,7 +62,6 @@ header strong {
     color: #2c3e50;
 }
 
-/* Карточка */
 .card {
     background: white;
     padding: 40px;
@@ -115,7 +114,6 @@ header strong {
     border-bottom: none;
 }
 
-/* Меню-сетка */
 .menu-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -152,7 +150,6 @@ header strong {
     color: #95a5a6;
 }
 
-/* Таблица оценок */
 .grades-table {
     width: 100%;
     border-collapse: separate;
@@ -214,7 +211,6 @@ header strong {
     color: #721c24;
 }
 
-/* Сетка предметов */
 .subjects-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -301,7 +297,6 @@ header strong {
     color: #11998e;
 }
 
-/* Расписание */
 .schedule-container {
     margin-top: 25px;
 }
@@ -539,10 +534,8 @@ header .btn {
 .day-SATURDAY { background-color: #f0ffff; }    /* azure */
 .day-SUNDAY { background-color: #fffff0; }      /* ivory */
 
-/* Небольшой отступ между строками для читабельности */
 .table tbody tr + tr { border-top: 2px solid #eef2f5; }
 
-/* Список классов (teacher/classes) */
 .list {
     list-style: none;
     margin: 0;
@@ -566,7 +559,7 @@ header .btn {
     color: #2c3e50;
 }
 .list li .btn {
-    padding: 8px 18px; /* компактнее в строке */
+    padding: 8px 18px;
     font-size: 13px;
     box-shadow: none;
 }

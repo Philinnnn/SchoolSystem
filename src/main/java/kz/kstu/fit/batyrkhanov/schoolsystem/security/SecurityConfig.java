@@ -28,6 +28,10 @@ public class SecurityConfig {
     public LogoutSuccessHandler auditLogoutSuccessHandler() {
         return new AuditAuthHandlers.AuditLogoutSuccessHandler(auditService);
     }
+    @Bean
+    public AuditAuthHandlers.AuditLoginFailureHandler auditLoginFailureHandler() {
+        return new AuditAuthHandlers.AuditLoginFailureHandler(auditService);
+    }
 
     @Bean
     public TotpVerificationFilter totpVerificationFilter(UserRepository userRepository) {
@@ -56,6 +60,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/login")
                         .successHandler(auditAuthSuccessHandler())
+                        .failureHandler(auditLoginFailureHandler())
                         .permitAll()
                 )
                 .logout(logout -> logout
