@@ -88,29 +88,31 @@
             <tr th:each="g : ${grades}">
                 <td th:text="${g.student.user != null ? g.student.user.fullName : ('ID ' + g.student.id)}">Студент</td>
                 <td>
-                    <form th:action="@{'/teacher/grades/' + ${g.id} + '/update'}" method="post" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <form th:id="'form-' + ${g.id}" th:action="@{'/teacher/grades/' + ${g.id} + '/update'}" method="post">
                         <input type="hidden" name="className" th:value="${className}">
                         <select name="subjectId">
                             <option th:each="subj : ${subjects}"
                                     th:value="${subj.id}"
-                                    th:selected="${g.subject != null} ? ${subj.id} == ${g.subject.id} : false"
+                                    th:selected="${g.subject != null and subj.id == g.subject.id}"
                                     th:text="${subj.name}">Математика</option>
                         </select>
-                        <select name="grade">
-                            <option th:selected="${g.grade == 5}" value="5">5</option>
-                            <option th:selected="${g.grade == 4}" value="4">4</option>
-                            <option th:selected="${g.grade == 3}" value="3">3</option>
-                            <option th:selected="${g.grade == 2}" value="2">2</option>
-                            <option th:selected="${g.grade == 1}" value="1">1</option>
-                        </select>
-                        <input type="date" name="date" th:value="${g.gradeDate != null ? #temporals.format(g.gradeDate, 'yyyy-MM-dd') : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
-                        <button class="btn" type="submit">Сохранить</button>
                     </form>
                 </td>
-                <td><!-- колонка оценка уже в форме выше --></td>
-                <td><!-- колонка дата уже в форме выше --></td>
                 <td>
-                    <form th:action="@{'/teacher/grades/' + ${g.id} + '/delete'}" method="post" onsubmit="return confirm('Удалить оценку?');">
+                    <select name="grade" th:form="'form-' + ${g.id}">
+                        <option th:selected="${g.grade == 5}" value="5">5</option>
+                        <option th:selected="${g.grade == 4}" value="4">4</option>
+                        <option th:selected="${g.grade == 3}" value="3">3</option>
+                        <option th:selected="${g.grade == 2}" value="2">2</option>
+                        <option th:selected="${g.grade == 1}" value="1">1</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="date" name="date" th:form="'form-' + ${g.id}" th:value="${g.gradeDate != null ? #temporals.format(g.gradeDate, 'yyyy-MM-dd') : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                </td>
+                <td>
+                    <button class="btn" type="submit" th:form="'form-' + ${g.id}">Сохранить</button>
+                    <form th:action="@{'/teacher/grades/' + ${g.id} + '/delete'}" method="post" onsubmit="return confirm('Удалить оценку?');" style="display:inline; margin-left:5px;">
                         <input type="hidden" name="className" th:value="${className}">
                         <button class="btn" type="submit">Удалить</button>
                     </form>
