@@ -6,6 +6,7 @@ import kz.kstu.fit.batyrkhanov.schoolsystem.entity.User;
 import kz.kstu.fit.batyrkhanov.schoolsystem.repository.RoleRepository;
 import kz.kstu.fit.batyrkhanov.schoolsystem.repository.UserRepository;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.AuditService;
+import kz.kstu.fit.batyrkhanov.schoolsystem.service.BackupService;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -36,15 +37,18 @@ public class AdminController {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
+    private final BackupService backupService;
 
     public AdminController(UserRepository userRepository,
                            RoleRepository roleRepository,
                            PasswordEncoder passwordEncoder,
-                           AuditService auditService) {
+                           AuditService auditService,
+                           BackupService backupService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditService = auditService;
+        this.backupService = backupService;
     }
 
     @GetMapping
@@ -168,10 +172,31 @@ public class AdminController {
                         @RequestParam(name="page", required = false, defaultValue = "0") int page,
                         @RequestParam(name="size", required = false, defaultValue = "20") int size,
                         Model model) {
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
         LocalDateTime from = null, to = null;
-        try { if (fromStr != null && !fromStr.isBlank()) from = LocalDateTime.parse(fromStr, fmt); } catch (Exception ignored) {}
-        try { if (toStr != null && !toStr.isBlank()) to = LocalDateTime.parse(toStr, fmt); } catch (Exception ignored) {}
+        if (fromStr != null && !fromStr.isBlank()) {
+            try {
+                from = LocalDateTime.parse(fromStr, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+            } catch (Exception e) {
+                // Попытка парсинга с секундами
+                try {
+                    from = LocalDateTime.parse(fromStr);
+                } catch (Exception ex) {
+                    model.addAttribute("dateError", "Неверный формат даты 'от': " + fromStr);
+                }
+            }
+        }
+        if (toStr != null && !toStr.isBlank()) {
+            try {
+                to = LocalDateTime.parse(toStr, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+            } catch (Exception e) {
+                // Попытка парсинга с секундами
+                try {
+                    to = LocalDateTime.parse(toStr);
+                } catch (Exception ex) {
+                    model.addAttribute("dateError", "Неверный формат даты 'до': " + toStr);
+                }
+            }
+        }
         Page<AuditLog> p = auditService.search(user, action, from, to, page, size);
         model.addAttribute("page", p);
         model.addAttribute("actions", auditService.actions());
@@ -183,10 +208,21 @@ public class AdminController {
                                             @RequestParam(name="action", required = false) String action,
                                             @RequestParam(name="from", required = false) String fromStr,
                                             @RequestParam(name="to", required = false) String toStr) {
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
         LocalDateTime from = null, to = null;
-        try { if (fromStr != null && !fromStr.isBlank()) from = LocalDateTime.parse(fromStr, fmt); } catch (Exception ignored) {}
-        try { if (toStr != null && !toStr.isBlank()) to = LocalDateTime.parse(toStr, fmt); } catch (Exception ignored) {}
+        if (fromStr != null && !fromStr.isBlank()) {
+            try {
+                from = LocalDateTime.parse(fromStr, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+            } catch (Exception e) {
+                try { from = LocalDateTime.parse(fromStr); } catch (Exception ignored) {}
+            }
+        }
+        if (toStr != null && !toStr.isBlank()) {
+            try {
+                to = LocalDateTime.parse(toStr, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+            } catch (Exception e) {
+                try { to = LocalDateTime.parse(toStr); } catch (Exception ignored) {}
+            }
+        }
         Page<AuditLog> p = auditService.search(user, action, from, to, 0, 10000);
         String csv = auditService.toCsv(p.getContent());
         return ResponseEntity.ok()
@@ -200,10 +236,21 @@ public class AdminController {
                                              @RequestParam(name="action", required = false) String action,
                                              @RequestParam(name="from", required = false) String fromStr,
                                              @RequestParam(name="to", required = false) String toStr) throws Exception {
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
         LocalDateTime from = null, to = null;
-        try { if (fromStr != null && !fromStr.isBlank()) from = LocalDateTime.parse(fromStr, fmt); } catch (Exception ignored) {}
-        try { if (toStr != null && !toStr.isBlank()) to = LocalDateTime.parse(toStr, fmt); } catch (Exception ignored) {}
+        if (fromStr != null && !fromStr.isBlank()) {
+            try {
+                from = LocalDateTime.parse(fromStr, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+            } catch (Exception e) {
+                try { from = LocalDateTime.parse(fromStr); } catch (Exception ignored) {}
+            }
+        }
+        if (toStr != null && !toStr.isBlank()) {
+            try {
+                to = LocalDateTime.parse(toStr, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+            } catch (Exception e) {
+                try { to = LocalDateTime.parse(toStr); } catch (Exception ignored) {}
+            }
+        }
         Page<AuditLog> p = auditService.search(user, action, from, to, 0, 10000);
         java.util.List<AuditLog> logs = p.getContent();
         try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
@@ -238,5 +285,62 @@ public class AdminController {
         model.addAttribute("totpEnabledCount", userRepository.findAll().stream().filter(u -> Boolean.TRUE.equals(u.getTotpEnabled())).count());
         model.addAttribute("telegramLinkedCount", userRepository.findAll().stream().filter(u -> u.getTelegramId() != null).count());
         return "admin/data";
+    }
+
+    @GetMapping("/backups")
+    public String backups(Model model,
+                         @RequestParam(required = false) String success,
+                         @RequestParam(required = false) String error) {
+        System.out.println("AdminController.backups() called");
+        java.util.List<kz.kstu.fit.batyrkhanov.schoolsystem.service.BackupService.BackupInfo> backupsList = backupService.listBackups();
+        System.out.println("Backups list size: " + backupsList.size());
+        model.addAttribute("backups", backupsList);
+        if (success != null) model.addAttribute("success", success);
+        if (error != null) model.addAttribute("error", error);
+        return "admin/backups";
+    }
+
+    @PostMapping("/backups/create")
+    public String createBackup(HttpServletRequest request) {
+        try {
+            String backupPath = backupService.createBackup();
+            auditService.log("BACKUP_CREATE", getCurrentUsername(), "Created backup: " + backupPath, request);
+            return "redirect:/admin/backups?success=" + java.net.URLEncoder.encode("Бэкап успешно создан", java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return "redirect:/admin/backups?error=" + java.net.URLEncoder.encode("Ошибка создания бэкапа: " + e.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+    }
+
+    @GetMapping("/backups/download/{filename}")
+    public ResponseEntity<byte[]> downloadBackup(@PathVariable String filename, HttpServletRequest request) {
+        try {
+            java.io.File file = backupService.getBackupFile(filename);
+            byte[] data = java.nio.file.Files.readAllBytes(file.toPath());
+            auditService.log("BACKUP_DOWNLOAD", getCurrentUsername(), "Downloaded backup: " + filename, request);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(data);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/backups/delete/{filename}")
+    public String deleteBackup(@PathVariable String filename, HttpServletRequest request) {
+        try {
+            backupService.deleteBackup(filename);
+            auditService.log("BACKUP_DELETE", getCurrentUsername(), "Deleted backup: " + filename, request);
+            return "redirect:/admin/backups?success=" + java.net.URLEncoder.encode("Бэкап удалён", java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return "redirect:/admin/backups?error=" + java.net.URLEncoder.encode("Ошибка удаления: " + e.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+    }
+
+
+    private String getCurrentUsername() {
+        org.springframework.security.core.Authentication auth =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : "system";
     }
 }

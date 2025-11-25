@@ -15,6 +15,10 @@
         .badge.TG_LINK, .badge.TG_UNLINK, .badge.TG_LOGIN_TOKEN, .badge.TG_LOGIN_TOKEN_CONSUME, .badge.TG_LINK_CODE { background:#e1f5fe; color:#01579b; }
         .badge.USER_CREATE, .badge.USER_UPDATE { background:#fce4ec; color:#ad1457; }
         .badge.SETTINGS_UPDATE { background:#fffde7; color:#f57f17; }
+        .badge.BACKUP_CREATE, .badge.BACKUP_DOWNLOAD { background:#d1f2eb; color:#0e6251; }
+        .badge.BACKUP_DELETE { background:#fadbd8; color:#922b21; }
+        .badge.BACKUP_RESTORE { background:#d4edda; color:#155724; }
+        .badge.GRADE_ADD, .badge.GRADE_UPDATE, .badge.GRADE_DELETE { background:#cfe2ff; color:#084298; }
         .table thead th { position:sticky; top:0; background:#f3f6f9; z-index:1; }
         .pagination { display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
         .pagination a { text-decoration:none; padding:6px 10px; border-radius:6px; background:#f3f6f9; color:#2c3e50; }
@@ -53,16 +57,23 @@
     </header>
     <div class="card">
         <h2>Фильтры</h2>
-        <form class="filters" method="get" th:action="@{/admin/audit}">
-            <input class="input" type="text" name="user" placeholder="Пользователь" th:value="${param.user}">
-            <select class="input" name="action">
-                <option value="">Все действия</option>
-                <option th:each="a : ${actions}" th:value="${a}" th:text="${a}" th:selected="${param.action == a}"></option>
-            </select>
-            <input class="input" type="datetime-local" name="from" th:value="${param.from}">
-            <input class="input" type="datetime-local" name="to" th:value="${param.to}">
-            <button class="btn" type="submit">Применить</button>
-            <a class="btn" href="/admin/audit">Сброс</a>
+        <div th:if="${dateError}" class="error-message" style="margin-bottom:10px;">
+            <p th:text="${dateError}"></p>
+        </div>
+        <form method="get" th:action="@{/admin/audit}">
+            <div class="filters">
+                <input class="input" type="text" name="user" placeholder="Пользователь" th:value="${param.user}">
+                <select class="input" name="action">
+                    <option value="">Все действия</option>
+                    <option th:each="a : ${actions}" th:value="${a}" th:text="${a}" th:selected="${param.action == a}"></option>
+                </select>
+                <input class="input" type="datetime-local" name="from" th:value="${param.from}">
+                <input class="input" type="datetime-local" name="to" th:value="${param.to}">
+            </div>
+            <div style="display:flex; gap:10px; margin-top:12px;">
+                <button class="btn" type="submit">Применить</button>
+                <a class="btn" href="/admin/audit">Сброс</a>
+            </div>
         </form>
         <div class="count-box">Записей на странице: <strong th:text="${page.number + 1}"></strong>/<strong th:text="${page.totalPages}"></strong>, всего: <strong th:text="${page.totalElements}"></strong></div>
         <table class="table" style="margin-top:12px;">
@@ -83,9 +94,9 @@
             </tbody>
         </table>
         <div class="pagination">
-            <a th:if="${page.number > 0}" th:href="@{/admin/audit(page=${page.number-1},size=${page.size},user=${param.user},action=${param.action},from=${param.from},to=${param.to})}">← Назад</a>
-            <span class="current">Стр. <span th:text="${page.number + 1}"></span> / <span th:text="${page.totalPages}"></span></span>
-            <a th:if="${page.number + 1 < page.totalPages}" th:href="@{/admin/audit(page=${page.number+1},size=${page.size},user=${param.user},action=${param.action},from=${param.from},to=${param.to})}">Вперёд →</a>
+            <a th:if="${page.number > 0}" th:href="@{/admin/audit(page=${page.number - 1},size=${page.size},user=${param.user},action=${param.action},from=${param.from},to=${param.to})}">← Назад</a>
+            <span class="current">Стр. <span th:text="${page.number + 1}"></span> / <span th:text="${page.getTotalPages()}"></span></span>
+            <a th:if="${page.number + 1 < page.getTotalPages()}" th:href="@{/admin/audit(page=${page.number + 1},size=${page.size},user=${param.user},action=${param.action},from=${param.from},to=${param.to})}">Вперёд →</a>
         </div>
     </div>
 </div>

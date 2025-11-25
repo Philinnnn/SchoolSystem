@@ -26,10 +26,8 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // 1) Очистка некорректных данных из прошлых запусков/миграций
         repairInconsistentAssignments();
 
-        // 2) Инициализация оценок: соблюдаем (учитель -> его предметы)
         if (gradeRepository.count() == 0) {
             List<Student> students = studentRepository.findAll();
             List<Teacher> teachers = teacherRepository.findAllWithUserAndSubjects();
@@ -49,10 +47,8 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // 3) Инициализация расписания: соблюдаем (учитель -> его предметы)
         if (scheduleRepository.count() == 0) {
             List<Teacher> teachers = teacherRepository.findAllWithUserAndSubjects();
-            // Классы берём из студентов; если нет студентов — используем дефолтные классы
             List<String> classes = studentRepository.findAll().stream()
                     .map(Student::getClassName)
                     .filter(Objects::nonNull)
@@ -69,7 +65,6 @@ public class DataInitializer implements CommandLineRunner {
                 List<Subject> tSubjects = new ArrayList<>(t.getSubjects());
                 int lessonIndex = 0;
                 for (String cls : classes) {
-                    // Для каждого класса дадим по 1-2 занятия этого учителя в неделю
                     int lessonsPerClass = 1 + random.nextInt(2);
                     for (int i = 0; i < lessonsPerClass; i++) {
                         Subject subj = tSubjects.get(lessonIndex % tSubjects.size());
@@ -84,14 +79,12 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // 4) Подстраховка для teacher1/teacher2: если у них нет занятий, создаём по их предметам
         ensureTeacherHasSchedule("teacher1", "10А");
         ensureTeacherHasSchedule("teacher2", "10Б");
     }
 
     private void repairInconsistentAssignments() {
         try {
-            // Удаляем оценки, где предмет не преподаётся этим учителем
             List<Grade> allGrades = gradeRepository.findAll();
             for (Grade g : allGrades) {
                 Teacher t = g.getTeacher();
@@ -100,7 +93,6 @@ public class DataInitializer implements CommandLineRunner {
                     gradeRepository.delete(g);
                 }
             }
-            // Удаляем занятия, где предмет не преподаётся этим учителем
             List<Schedule> allSchedules = scheduleRepository.findAll();
             for (Schedule sc : allSchedules) {
                 Teacher t = sc.getTeacher();

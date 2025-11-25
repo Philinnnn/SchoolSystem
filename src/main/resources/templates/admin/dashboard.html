@@ -20,13 +20,12 @@
     <div class="card">
         <h2>Управление системой</h2>
         <p>Вы вошли как <strong>Администратор</strong>. У вас есть полный доступ ко всем функциям системы.</p>
-        <div style="margin-top:24px;">
-            <ul style="list-style:none; padding:0; display:grid; gap:10px;">
-                <li><a href="/admin/users">Управление пользователями и ролями</a></li>
-                <li><a href="/admin/audit">Журнал действий (аудит) + экспорт</a></li>
-                <li><a href="/admin/data">Обзор данных</a></li>
-                <li><a href="/admin/settings">Настройки системы</a></li>
-            </ul>
+        <div style="margin-top:24px; display:grid; gap:12px;">
+            <a href="/admin/users" class="btn" style="text-align:left; padding:12px 16px;">Управление пользователями и ролями</a>
+            <a href="/admin/audit" class="btn" style="text-align:left; padding:12px 16px;">Журнал действий (аудит) + экспорт</a>
+            <a href="/admin/data" class="btn" style="text-align:left; padding:12px 16px;">Обзор данных</a>
+            <a href="/admin/backups" class="btn" style="text-align:left; padding:12px 16px;">Управление бэкапами базы данных</a>
+            <a href="/admin/settings" class="btn" style="text-align:left; padding:12px 16px;">Настройки системы</a>
         </div>
     </div>
 </div>

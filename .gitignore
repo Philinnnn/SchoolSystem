@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Backups ###
+backups/
+*.bak
+
+### Environment Variables ###
+.env
+
