@@ -1,5 +1,6 @@
 package kz.kstu.fit.batyrkhanov.schoolsystem.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import kz.kstu.fit.batyrkhanov.schoolsystem.entity.User;
 import kz.kstu.fit.batyrkhanov.schoolsystem.repository.UserRepository;
@@ -7,6 +8,7 @@ import kz.kstu.fit.batyrkhanov.schoolsystem.service.QrCodeService;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.TotpService;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.UserService;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.TelegramAuthService;
+import kz.kstu.fit.batyrkhanov.schoolsystem.service.AuditService; // добавлено
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,17 +30,20 @@ public class ProfileController {
     private final TotpService totpService;
     private final QrCodeService qrCodeService;
     private final TelegramAuthService telegramAuthService;
+    private final AuditService auditService; // добавлено
 
     public ProfileController(UserService userService,
                              UserRepository userRepository,
                              TotpService totpService,
                              QrCodeService qrCodeService,
-                             TelegramAuthService telegramAuthService) {
+                             TelegramAuthService telegramAuthService,
+                             AuditService auditService) { // добавлено
         this.userService = userService;
         this.userRepository = userRepository;
         this.totpService = totpService;
         this.qrCodeService = qrCodeService;
         this.telegramAuthService = telegramAuthService;
+        this.auditService = auditService; // добавлено
     }
 
     @GetMapping
@@ -61,7 +66,7 @@ public class ProfileController {
     public String regenerateTelegramCode(@AuthenticationPrincipal UserDetails principal) {
         User user = userRepository.findByUsername(principal.getUsername());
         if (user != null && user.getTelegramId() == null) {
-            telegramAuthService.generateLinkCode(user);
+            telegramAuthService.generateLinkCode(user); // внутри уже логирует TG_LINK_CODE
         }
         return "redirect:/profile";
     }
@@ -70,7 +75,7 @@ public class ProfileController {
     public String unlinkTelegram(@AuthenticationPrincipal UserDetails principal) {
         User user = userRepository.findByUsername(principal.getUsername());
         if (user != null && user.getTelegramId() != null) {
-            telegramAuthService.unbindTelegram(user);
+            telegramAuthService.unbindTelegram(user); // TG_UNLINK логируется
         }
         return "redirect:/profile";
     }
@@ -80,7 +85,8 @@ public class ProfileController {
                                  @RequestParam String currentPassword,
                                  @RequestParam String newPassword,
                                  @RequestParam String confirmPassword,
-                                 Model model) {
+                                 Model model,
+                                 HttpServletRequest request) { // добавлен request
         User user = userRepository.findByUsername(principal.getUsername());
         model.addAttribute("user", user);
         if (!StringUtils.hasText(newPassword) || newPassword.length() < 6) {
@@ -145,7 +151,8 @@ public class ProfileController {
     public String enableTotp(@AuthenticationPrincipal UserDetails principal,
                              HttpSession session,
                              @RequestParam("code") String code,
-                             Model model) {
+                             Model model,
+                             HttpServletRequest request) { // добавлен request
         String secret = (String) session.getAttribute(SESSION_TOTP_SETUP_SECRET);
         if (!StringUtils.hasText(secret)) {
             return "redirect:/profile/totp";
@@ -175,14 +182,15 @@ public class ProfileController {
     @PostMapping("/totp/disable")
     public String disableTotp(@AuthenticationPrincipal UserDetails principal,
                               @RequestParam("currentPassword") String currentPassword,
-                              Model model) {
+                              Model model,
+                              HttpServletRequest request) { // добавлен request
         boolean ok = userService.disableTotp(principal.getUsername(), currentPassword);
         if (!ok) {
             model.addAttribute("alreadyEnabled", true);
             model.addAttribute("disableError", "Пароль неверный.");
             return "profile/totp_setup";
         }
+        auditService.log("TOTP_DISABLE", principal.getUsername(), "Disabled TOTP", request); // лог
         return "redirect:/profile";
     }
 }
-

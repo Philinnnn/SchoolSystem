@@ -23,6 +23,7 @@ public class TeacherService {
     @Autowired private ScheduleRepository scheduleRepository;
     @Autowired private StudentRepository studentRepository;
     @Autowired private GradeRepository gradeRepository;
+    @Autowired private AuditService auditService;
 
     @Transactional(readOnly = true)
     public Teacher findTeacherByUsername(String username) {
@@ -115,7 +116,9 @@ public class TeacherService {
             throw new IllegalStateException("В выбранный день у вас нет урока по этому предмету для класса " + className);
         }
         Grade grade = new Grade(student, subject, teacher, gradeValue, when);
-        return gradeRepository.save(grade);
+        Grade saved = gradeRepository.save(grade);
+        auditService.log("GRADE_ADD", teacher.getUser().getUsername(), "student=" + student.getUser().getUsername() + ", subject=" + subject.getName() + ", grade=" + gradeValue + ", date=" + when);
+        return saved;
     }
 
     @Transactional
@@ -150,7 +153,9 @@ public class TeacherService {
         if (!hasLesson) {
             throw new IllegalStateException("В выбранный день у вас нет урока по этому предмету для класса " + className);
         }
-        return gradeRepository.save(g);
+        Grade updated = gradeRepository.save(g);
+        auditService.log("GRADE_UPDATE", teacher.getUser().getUsername(), "gradeId=" + gradeId + ", newGrade=" + (gradeValue!=null?gradeValue:g.getGrade()) + (subjectId!=null?", subjectId="+subjectId:"") + (date!=null?", date="+date:""));
+        return updated;
     }
 
     @Transactional
@@ -160,6 +165,7 @@ public class TeacherService {
         if (!g.getTeacher().getId().equals(teacher.getId())) {
             throw new SecurityException("Нельзя удалять чужие оценки");
         }
+        auditService.log("GRADE_DELETE", teacher.getUser().getUsername(), "gradeId=" + gradeId);
         gradeRepository.deleteById(gradeId);
     }
 }

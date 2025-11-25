@@ -16,11 +16,17 @@ public class TelegramAuthService {
     private final UserRepository userRepository;
     private final TelegramRuntimeConfig runtimeConfig;
     private final Random random = new SecureRandom();
+    private final AuditService auditService;
+    private final SettingsService settingsService;
 
     public TelegramAuthService(UserRepository userRepository,
-                               TelegramRuntimeConfig runtimeConfig) {
+                               TelegramRuntimeConfig runtimeConfig,
+                               AuditService auditService,
+                               SettingsService settingsService) {
         this.userRepository = userRepository;
         this.runtimeConfig = runtimeConfig;
+        this.auditService = auditService;
+        this.settingsService = settingsService;
     }
 
     /**
@@ -30,10 +36,12 @@ public class TelegramAuthService {
     public String generateLoginToken(User user, Long ttlMinutesOverride) {
         if (user == null) return null;
         String token = randomDigits(6);
-        long ttl = (ttlMinutesOverride != null && ttlMinutesOverride > 0) ? ttlMinutesOverride : runtimeConfig.getLoginTokenTtlMinutes();
+        long ttl = ttlMinutesOverride != null && ttlMinutesOverride > 0 ? ttlMinutesOverride :
+                settingsService.getLong("telegram_login_token_ttl_minutes").orElse(runtimeConfig.getLoginTokenTtlMinutes());
         user.setPasswordResetToken(token);
         user.setPasswordResetExpiry(LocalDateTime.now().plusMinutes(ttl));
         userRepository.save(user);
+        auditService.log("TG_LOGIN_TOKEN", user.getUsername(), "Generated Telegram login token TTL=" + ttl + "m");
         return token;
     }
 
@@ -57,6 +65,7 @@ public class TelegramAuthService {
         user.setPasswordResetToken(null);
         user.setPasswordResetExpiry(null);
         userRepository.save(user);
+        auditService.log("TG_LOGIN_TOKEN_CONSUME", user.getUsername(), "Consumed Telegram login token");
     }
 
     /**
@@ -68,6 +77,7 @@ public class TelegramAuthService {
         String code = randomAlphaNum(8);
         user.setTelegramLinkCode(code);
         userRepository.save(user);
+        auditService.log("TG_LINK_CODE", user.getUsername(), "Generated Telegram link code");
         return code;
     }
 
@@ -92,6 +102,7 @@ public class TelegramAuthService {
         user.setTelegramId(chatId);
         user.setTelegramLinkCode(null); // одноразовый код больше не нужен
         userRepository.save(user);
+        auditService.log("TG_LINK", user.getUsername(), "Bound Telegram chatId=" + chatId);
         return true;
     }
 
@@ -103,6 +114,7 @@ public class TelegramAuthService {
         if (user == null) return false;
         user.setTelegramId(null);
         userRepository.save(user);
+        auditService.log("TG_UNLINK", user.getUsername(), "Unbound Telegram");
         return true;
     }
 
@@ -119,4 +131,3 @@ public class TelegramAuthService {
         return sb.toString();
     }
 }
-

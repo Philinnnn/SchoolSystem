@@ -1,6 +1,8 @@
 package kz.kstu.fit.batyrkhanov.schoolsystem.security;
 
 import kz.kstu.fit.batyrkhanov.schoolsystem.repository.UserRepository;
+import kz.kstu.fit.batyrkhanov.schoolsystem.service.AuditService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,9 +12,23 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 @Configuration
 public class SecurityConfig {
+    @Autowired
+    private AuditService auditService;
+
+    @Bean
+    public AuthenticationSuccessHandler auditAuthSuccessHandler() {
+        return new AuditAuthHandlers.AuditAuthenticationSuccessHandler(auditService);
+    }
+    @Bean
+    public LogoutSuccessHandler auditLogoutSuccessHandler() {
+        return new AuditAuthHandlers.AuditLogoutSuccessHandler(auditService);
+    }
+
     @Bean
     public TotpVerificationFilter totpVerificationFilter(UserRepository userRepository) {
         return new TotpVerificationFilter(userRepository);
@@ -39,11 +55,11 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .successHandler(auditAuthSuccessHandler())
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/login?logout")
+                        .logoutSuccessHandler(auditLogoutSuccessHandler())
                         .permitAll()
                 );
 

@@ -6,9 +6,9 @@ CREATE TABLE grades (
     teacher_id BIGINT NOT NULL,
     grade INT NOT NULL,
     grade_date DATE,
-    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
-    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE NO ACTION,
+    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE NO ACTION,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE NO ACTION
 );
 
 -- Insert test grades for student1

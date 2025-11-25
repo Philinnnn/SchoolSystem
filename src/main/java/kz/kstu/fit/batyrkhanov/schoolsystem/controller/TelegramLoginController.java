@@ -6,6 +6,7 @@ import kz.kstu.fit.batyrkhanov.schoolsystem.service.TelegramAuthService;
 import kz.kstu.fit.batyrkhanov.schoolsystem.config.TelegramRuntimeConfig;
 import kz.kstu.fit.batyrkhanov.schoolsystem.telegram.LoginRequestStore;
 import kz.kstu.fit.batyrkhanov.schoolsystem.telegram.TelegramBot;
+import kz.kstu.fit.batyrkhanov.schoolsystem.service.AuditService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,19 +33,22 @@ public class TelegramLoginController {
     private final TelegramRuntimeConfig runtimeConfig;
     private final LoginRequestStore loginRequestStore;
     private final TelegramBot telegramBot;
+    private final AuditService auditService;
 
     public TelegramLoginController(UserRepository userRepository,
                                    TelegramAuthService telegramAuthService,
                                    UserDetailsService userDetailsService,
                                    TelegramRuntimeConfig runtimeConfig,
                                    LoginRequestStore loginRequestStore,
-                                   TelegramBot telegramBot) {
+                                   TelegramBot telegramBot,
+                                   AuditService auditService) {
         this.userRepository = userRepository;
         this.telegramAuthService = telegramAuthService;
         this.userDetailsService = userDetailsService;
         this.runtimeConfig = runtimeConfig;
         this.loginRequestStore = loginRequestStore;
         this.telegramBot = telegramBot;
+        this.auditService = auditService;
     }
 
     @PostMapping("/token")
@@ -101,6 +105,7 @@ public class TelegramLoginController {
         }
         model.addAttribute("requestId", lr.getId());
         model.addAttribute("username", username);
+        auditService.log("TG_LOGIN_START", username, "Started Telegram login request=" + lr.getId());
         return "login_telegram_wait";
     }
 
@@ -141,7 +146,8 @@ public class TelegramLoginController {
         request.getSession(true);
         new HttpSessionSecurityContextRepository()
                 .saveContext(SecurityContextHolder.getContext(), request, response);
-
+        auditService.log("TG_LOGIN_CONSUME", user.getUsername(), "Telegram login consumed request=" + requestId, request);
+        auditService.log("LOGIN", user.getUsername(), "Telegram login success", request);
         return "redirect:/dashboard";
     }
 

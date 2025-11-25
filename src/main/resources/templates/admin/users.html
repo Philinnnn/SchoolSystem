@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Пользователи — Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .filters { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin:0 0 18px 0; }
+        .muted { color:#7f8c8d; font-size:12px; }
+        .roles-box { display:flex; flex-wrap:wrap; gap:8px; }
+        .roles-box span { background:#eef; padding:4px 8px; border-radius:6px; font-size:12px; }
+        .inline-form { display:grid; gap:6px; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); }
+        .table tbody tr:hover { background:#f8f9fa; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Управление пользователями</h1>
+        <div>
+            <a class="btn" href="/admin">Панель</a>
+            <a class="btn" href="/admin/audit">Журнал</a>
+            <a class="btn" href="/admin/data">Обзор</a>
+            <a class="btn" href="/admin/settings">Настройки</a>
+            <form method="post" th:action="@{/logout}" style="display:inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+    <div class="card">
+        <h2>Фильтр пользователей</h2>
+        <form class="filters" method="get" th:action="@{/admin/users}">
+            <input class="input" type="text" name="q" placeholder="Логин" th:value="${q}">
+            <select class="input" name="role">
+                <option value="">Все роли</option>
+                <option th:each="r : ${roles}" th:value="${r.name}" th:text="${r.name}" th:selected="${roleFilter == r.name}"></option>
+            </select>
+            <button class="btn" type="submit">Искать</button>
+            <a class="btn" href="/admin/users">Сброс</a>
+        </form>
+    </div>
+    <div class="card" style="margin-top:24px;">
+        <h2>Создать пользователя</h2>
+        <form method="post" th:action="@{/admin/users/create}" style="display:grid; gap:12px; max-width:480px;">
+            <input class="input" type="text" name="username" placeholder="Логин" required>
+            <input class="input" type="text" name="fullName" placeholder="ФИО">
+            <input class="input" type="password" name="password" placeholder="Пароль" required>
+            <select class="input" name="role">
+                <option value="">Без роли</option>
+                <option th:each="r : ${roles}" th:value="${r.name}" th:text="${r.name}"></option>
+            </select>
+            <button class="btn" type="submit">Создать</button>
+            <div th:if="${error}" class="error-message" th:text="${error}"></div>
+        </form>
+    </div>
+    <div class="card" style="margin-top:24px;">
+        <h2>Список пользователей (<span th:text="${users.size()}"></span>)</h2>
+        <table class="table" style="margin-top:12px;">
+            <thead><tr><th>ID</th><th>Логин</th><th>ФИО</th><th>Роли</th><th>Обновить данные</th><th>Изменить роли</th></tr></thead>
+            <tbody>
+            <tr th:each="u : ${users}">
+                <td th:text="${u.id}"></td>
+                <td th:text="${u.username}"></td>
+                <td th:text="${u.fullName}"></td>
+                <td>
+                    <div class="roles-box">
+                        <span th:each="r : ${u.roles}" th:text="${r.name}"></span>
+                    </div>
+                </td>
+                <td>
+                    <form method="post" th:action="@{'/admin/users/' + ${u.id} + '/update'}" class="inline-form">
+                        <input class="input" type="text" name="fullName" th:placeholder="${u.fullName}" th:value="${u.fullName}">
+                        <input class="input" type="password" name="newPassword" placeholder="Новый пароль">
+                        <button class="btn" type="submit">Сохранить</button>
+                    </form>
+                </td>
+                <td>
+                    <form th:if="${u.roles.^[name=='ROLE_ADMIN']} == null" method="post" th:action="@{'/admin/users/' + ${u.id} + '/roles'}" style="display:flex; flex-direction:column; gap:6px;">
+                        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                            <label th:each="r : ${roles}" style="display:flex; align-items:center; gap:4px; font-size:12px; background:#f3f6f9; padding:4px 6px; border-radius:6px;">
+                                <input type="checkbox" name="roles" th:value="${r.name}" th:checked="${u.roles.contains(r)}"> <span th:text="${r.name}"></span>
+                            </label>
+                        </div>
+                        <button class="btn" type="submit">Обновить роли</button>
+                    </form>
+                    <span th:if="${u.roles.^[name=='ROLE_ADMIN']} != null">Нельзя менять роли администратора</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <p class="muted" style="margin-top:12px;">Для безопасности нельзя изменять роли аккаунтов с ROLE_ADMIN.</p>
+    </div>
+</div>
+</body>
+</html>

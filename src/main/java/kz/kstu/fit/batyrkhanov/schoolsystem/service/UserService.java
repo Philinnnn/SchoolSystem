@@ -11,10 +11,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditService auditService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuditService auditService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -24,6 +26,7 @@ public class UserService {
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) return false;
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+        auditService.log("PASSWORD_CHANGE", username, "User changed own password");
         return true;
     }
 
@@ -34,6 +37,7 @@ public class UserService {
         user.setTotpSecret(secret);
         user.setTotpEnabled(true);
         userRepository.save(user);
+        auditService.log("TOTP_ENABLE", username, "Enabled TOTP");
     }
 
     @Transactional
@@ -44,7 +48,7 @@ public class UserService {
         user.setTotpEnabled(false);
         user.setTotpSecret(null);
         userRepository.save(user);
+        auditService.log("TOTP_DISABLE", username, "Disabled TOTP");
         return true;
     }
 }
-

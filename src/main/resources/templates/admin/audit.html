@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Журнал аудита — Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .filters { display:grid; grid-template-columns: repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin-bottom:12px; }
+        .badge { display:inline-block; padding:4px 8px; border-radius:12px; font-size:11px; font-weight:600; letter-spacing:.5px; }
+        .badge.LOGIN { background:#e3f2fd; color:#0d47a1; }
+        .badge.LOGOUT { background:#ede7f6; color:#4527a0; }
+        .badge.PASSWORD_CHANGE, .badge.PASSWORD_RESET_ADMIN { background:#e8f5e9; color:#1b5e20; }
+        .badge.ROLE_CHANGE { background:#fff3e0; color:#e65100; }
+        .badge.TOTP_ENABLE, .badge.TOTP_DISABLE { background:#f3e5f5; color:#6a1b9a; }
+        .badge.TG_LINK, .badge.TG_UNLINK, .badge.TG_LOGIN_TOKEN, .badge.TG_LOGIN_TOKEN_CONSUME, .badge.TG_LINK_CODE { background:#e1f5fe; color:#01579b; }
+        .badge.USER_CREATE, .badge.USER_UPDATE { background:#fce4ec; color:#ad1457; }
+        .badge.SETTINGS_UPDATE { background:#fffde7; color:#f57f17; }
+        .table thead th { position:sticky; top:0; background:#f3f6f9; z-index:1; }
+        .pagination { display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+        .pagination a { text-decoration:none; padding:6px 10px; border-radius:6px; background:#f3f6f9; color:#2c3e50; }
+        .pagination .current { font-weight:700; }
+        .count-box { font-size:13px; color:#7f8c8d; margin-top:4px; }
+        tbody tr:hover { background:#f8f9fa; }
+        table.table { table-layout: fixed; width:100%; }
+        table.table th, table.table td { padding:6px 8px; word-wrap:break-word; }
+        table.table th:nth-child(1) { width:80px; }
+        table.table th:nth-child(2) { width:140px; }
+        table.table th:nth-child(3) { width:120px; }
+        table.table th:nth-child(4) { width:140px; }
+        table.table th:nth-child(5) { width:30%; }
+        table.table th:nth-child(6) { width:110px; }
+        table.table th:nth-child(7) { width:140px; }
+        table.table th:nth-child(8) { width:180px; }
+        .session-cell { font-size:11px; color:#555; }
+        .uuid-cell { font-size:11px; color:#7f8c8d; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Журнал аудита</h1>
+        <div>
+            <a class="btn" href="/admin">Панель</a>
+            <a class="btn" href="/admin/users">Пользователи</a>
+            <a class="btn" href="/admin/data">Обзор</a>
+            <a class="btn" href="/admin/settings">Настройки</a>
+            <a class="btn" th:href="@{/admin/audit/export.csv(user=${param.user},action=${param.action},from=${param.from},to=${param.to})}">CSV</a>
+            <a class="btn" th:href="@{/admin/audit/export.xlsx(user=${param.user},action=${param.action},from=${param.from},to=${param.to})}">XLSX</a>
+            <form method="post" th:action="@{/logout}" style="display:inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+    <div class="card">
+        <h2>Фильтры</h2>
+        <form class="filters" method="get" th:action="@{/admin/audit}">
+            <input class="input" type="text" name="user" placeholder="Пользователь" th:value="${param.user}">
+            <select class="input" name="action">
+                <option value="">Все действия</option>
+                <option th:each="a : ${actions}" th:value="${a}" th:text="${a}" th:selected="${param.action == a}"></option>
+            </select>
+            <input class="input" type="datetime-local" name="from" th:value="${param.from}">
+            <input class="input" type="datetime-local" name="to" th:value="${param.to}">
+            <button class="btn" type="submit">Применить</button>
+            <a class="btn" href="/admin/audit">Сброс</a>
+        </form>
+        <div class="count-box">Записей на странице: <strong th:text="${page.number + 1}"></strong>/<strong th:text="${page.totalPages}"></strong>, всего: <strong th:text="${page.totalElements}"></strong></div>
+        <table class="table" style="margin-top:12px;">
+            <thead>
+            <tr><th>ID</th><th>UUID</th><th>Время</th><th>Пользователь</th><th>Действие</th><th>Детали</th><th>IP</th><th>Сессия</th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="l : ${page.content}">
+                <td th:text="${l.id}"></td>
+                <td class="uuid-cell" th:text="${l.logUuid}"></td>
+                <td th:text="${#temporals.format(l.eventTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                <td th:text="${l.username}"></td>
+                <td><span class="badge" th:classappend="' ' + ${l.action}" th:text="${l.action}"></span></td>
+                <td th:text="${l.details}"></td>
+                <td th:text="${l.ip}"></td>
+                <td class="session-cell" th:text="${l.sessionId}"></td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="pagination">
+            <a th:if="${page.number > 0}" th:href="@{/admin/audit(page=${page.number-1},size=${page.size},user=${param.user},action=${param.action},from=${param.from},to=${param.to})}">← Назад</a>
+            <span class="current">Стр. <span th:text="${page.number + 1}"></span> / <span th:text="${page.totalPages}"></span></span>
+            <a th:if="${page.number + 1 < page.totalPages}" th:href="@{/admin/audit(page=${page.number+1},size=${page.size},user=${param.user},action=${param.action},from=${param.from},to=${param.to})}">Вперёд →</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

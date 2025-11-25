@@ -18,7 +18,7 @@ CREATE TABLE user_roles (
     role_id BIGINT NOT NULL,
     PRIMARY KEY (user_id, role_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE NO ACTION
 );
 
 -- Create students table
@@ -53,7 +53,7 @@ CREATE TABLE teacher_subjects (
     subject_id BIGINT NOT NULL,
     PRIMARY KEY (teacher_id, subject_id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
+    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE NO ACTION
 );
 
 -- Insert default roles
