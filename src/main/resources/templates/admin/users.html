@@ -2,6 +2,8 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf?.token ?: ''}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName ?: 'X-CSRF-TOKEN'}"/>
     <title>Пользователи — Admin</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
@@ -14,6 +16,8 @@
     </style>
 </head>
 <body>
+<input type="hidden" id="csrf-token" th:value="${_csrf?.token ?: ''}"/>
+<input type="hidden" id="csrf-header" th:value="${_csrf?.headerName ?: 'X-CSRF-TOKEN'}"/>
 <div class="container">
     <header>
         <h1>Управление пользователями</h1>
@@ -35,6 +39,11 @@
             <select class="input" name="role">
                 <option value="">Все роли</option>
                 <option th:each="r : ${roles}" th:value="${r.name}" th:text="${r.name}" th:selected="${roleFilter == r.name}"></option>
+            </select>
+            <select class="input" name="archived">
+                <option value="">Все статусы</option>
+                <option value="false" th:selected="${archivedFilter == 'false'}">Только активные</option>
+                <option value="true" th:selected="${archivedFilter == 'true'}">Только архивированные</option>
             </select>
             <button class="btn" type="submit">Искать</button>
             <a class="btn" href="/admin/users">Сброс</a>
@@ -62,7 +71,7 @@
     <div class="card" style="margin-top:24px;">
         <h2>Список пользователей (<span th:text="${users.size()}"></span>)</h2>
         <table class="table" style="margin-top:12px;">
-            <thead><tr><th>ID</th><th>Логин</th><th>ФИО</th><th>Роли</th><th>Обновить данные</th><th>Изменить роли</th></tr></thead>
+            <thead><tr><th>ID</th><th>Логин</th><th>ФИО</th><th>Роли</th><th>Статус</th><th>Обновить данные</th><th>Изменить роли</th><th>Архив</th></tr></thead>
             <tbody>
             <tr th:each="u : ${users}">
                 <td th:text="${u.id}"></td>
@@ -72,6 +81,10 @@
                     <div class="roles-box">
                         <span th:each="r : ${u.roles}" th:text="${r.name}"></span>
                     </div>
+                </td>
+                <td>
+                    <span th:if="${u.archived}" style="color:#e74c3c; font-weight:bold;">Архивирован</span>
+                    <span th:if="${!u.archived}" style="color:#27ae60;">Активен</span>
                 </td>
                 <td>
                     <form method="post" th:action="@{'/admin/users/' + ${u.id} + '/update'}" class="inline-form">
@@ -96,6 +109,13 @@
                     </form>
                     <span th:if="${u.roles.^[name=='ROLE_ADMIN']} != null">Нельзя менять роли администратора</span>
                 </td>
+                <td>
+                    <div th:if="${u.roles.^[name=='ROLE_ADMIN']} == null" style="display:flex; flex-direction:column; gap:6px;">
+                        <button th:if="${!u.archived}" class="btn btn-archive" th:data-user-id="${u.id}" th:data-username="${u.username}" style="background:#e74c3c;">Архивировать</button>
+                        <button th:if="${u.archived}" class="btn btn-unarchive" th:data-user-id="${u.id}" th:data-username="${u.username}" style="background:#27ae60;">Разархивировать</button>
+                    </div>
+                    <span th:if="${u.roles.^[name=='ROLE_ADMIN']} != null" style="color:#7f8c8d; font-size:12px;">Недоступно</span>
+                </td>
             </tr>
             </tbody>
         </table>
@@ -118,5 +138,173 @@ function togglePw(id, btn){
         eye.classList.remove('open');
     }
 }
+
+function getCsrfToken() {
+    console.log('=== Searching for CSRF token ===');
+
+    // Пробуем получить из любой формы на странице (Spring автоматически добавляет CSRF в формы)
+    const forms = document.querySelectorAll('form');
+    console.log('Forms found:', forms.length);
+    for (let i = 0; i < forms.length; i++) {
+        const csrfInput = forms[i].querySelector('input[name="_csrf"]');
+        if (csrfInput) {
+            const token = csrfInput.value;
+            console.log('✓ CSRF from form #' + i + ':', token);
+            return { token: token, header: 'X-CSRF-TOKEN' };
+        }
+    }
+    console.log('✗ No CSRF in forms');
+
+    // Сначала пробуем получить из скрытых полей
+    const tokenInput = document.getElementById('csrf-token');
+    const headerInput = document.getElementById('csrf-header');
+    console.log('Hidden token input:', tokenInput, 'value:', tokenInput?.value);
+    console.log('Hidden header input:', headerInput, 'value:', headerInput?.value);
+
+    if (tokenInput && headerInput && tokenInput.value && headerInput.value) {
+        const token = tokenInput.value;
+        const header = headerInput.value;
+        console.log('✓ CSRF from hidden inputs:', header, '=', token);
+        return { token: token, header: header };
+    }
+    console.log('✗ No valid CSRF in hidden inputs');
+
+    // Если не нашли в скрытых полях, пробуем meta теги
+    const tokenMeta = document.querySelector('meta[name="_csrf"]');
+    const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+    console.log('Meta token:', tokenMeta, 'content:', tokenMeta?.getAttribute('content'));
+    console.log('Meta header:', headerMeta, 'content:', headerMeta?.getAttribute('content'));
+
+    if (tokenMeta && headerMeta) {
+        const token = tokenMeta.getAttribute('content');
+        const header = headerMeta.getAttribute('content');
+        if (token && header) {
+            console.log('✓ CSRF from meta tags:', header, '=', token);
+            return { token: token, header: header };
+        }
+    }
+    console.log('✗ No valid CSRF in meta tags');
+
+    console.error('❌ CSRF token not found anywhere!');
+    return null;
+}
+
+function archiveUser(userId, username) {
+    if (!confirm('Вы уверены, что хотите архивировать пользователя ' + username + '?')) {
+        return;
+    }
+
+    const csrf = getCsrfToken();
+    if (!csrf) {
+        alert('Ошибка: CSRF токен не найден');
+        return;
+    }
+
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    headers[csrf.header] = csrf.token;
+
+    console.log('Archiving user:', userId, 'CSRF header:', csrf.header);
+
+    fetch('/admin/users/' + userId + '/archive', {
+        method: 'POST',
+        headers: headers
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error('HTTP ' + response.status + ': ' + text);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert(data.success);
+            location.reload();
+        } else if (data.error) {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Archive error:', error);
+        alert('Ошибка: ' + error.message);
+    });
+}
+
+function unarchiveUser(userId, username) {
+    if (!confirm('Вы уверены, что хотите разархивировать пользователя ' + username + '?')) {
+        return;
+    }
+
+    const csrf = getCsrfToken();
+    if (!csrf) {
+        alert('Ошибка: CSRF токен не найден');
+        return;
+    }
+
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    headers[csrf.header] = csrf.token;
+
+    console.log('Unarchiving user:', userId, 'CSRF header:', csrf.header);
+
+    fetch('/admin/users/' + userId + '/unarchive', {
+        method: 'POST',
+        headers: headers
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error('HTTP ' + response.status + ': ' + text);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert(data.success);
+            location.reload();
+        } else if (data.error) {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Unarchive error:', error);
+        alert('Ошибка: ' + error.message);
+    });
+}
+
+// Инициализация обработчиков событий после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing archive buttons');
+
+    // Обработчики для кнопок архивирования
+    document.querySelectorAll('.btn-archive').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const username = this.getAttribute('data-username');
+            console.log('Archive button clicked for user:', userId, username);
+            archiveUser(userId, username);
+        });
+    });
+
+    // Обработчики для кнопок разархивирования
+    document.querySelectorAll('.btn-unarchive').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const username = this.getAttribute('data-username');
+            console.log('Unarchive button clicked for user:', userId, username);
+            unarchiveUser(userId, username);
+        });
+    });
+
+    console.log('Archive buttons initialized:', document.querySelectorAll('.btn-archive').length);
+    console.log('Unarchive buttons initialized:', document.querySelectorAll('.btn-unarchive').length);
+});
 </script>
 </html>

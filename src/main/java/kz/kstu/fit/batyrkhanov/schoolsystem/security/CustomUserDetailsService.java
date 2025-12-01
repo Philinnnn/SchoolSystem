@@ -27,6 +27,10 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Пользователь не найден: " + username);
         }
 
+        if (Boolean.TRUE.equals(user.getArchived())) {
+            throw new UsernameNotFoundException("Учётная запись архивирована: " + username);
+        }
+
         Set<GrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toSet());
@@ -35,6 +39,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .authorities(authorities)
+                .disabled(Boolean.TRUE.equals(user.getArchived()))
                 .build();
     }
 }

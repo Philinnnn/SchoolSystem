@@ -51,4 +51,30 @@ public class UserService {
         auditService.log("TOTP_DISABLE", username, "Disabled TOTP");
         return true;
     }
+
+    @Transactional
+    public boolean archiveUser(Long userId, String adminUsername) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return false;
+
+        boolean isAdmin = user.getRoles().stream()
+                .anyMatch(role -> "ROLE_ADMIN".equals(role.getName()));
+        if (isAdmin) return false;
+
+        user.setArchived(true);
+        userRepository.save(user);
+        auditService.log("USER_ARCHIVE", adminUsername, "Archived user: " + user.getUsername());
+        return true;
+    }
+
+    @Transactional
+    public boolean unarchiveUser(Long userId, String adminUsername) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return false;
+
+        user.setArchived(false);
+        userRepository.save(user);
+        auditService.log("USER_UNARCHIVE", adminUsername, "Unarchived user: " + user.getUsername());
+        return true;
+    }
 }

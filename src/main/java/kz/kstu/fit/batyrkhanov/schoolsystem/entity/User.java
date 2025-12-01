@@ -38,7 +38,10 @@ public class User {
     private String passwordResetToken; // используем также как код входа через Telegram
 
     @Column(name = "password_reset_expiry")
-    private LocalDateTime passwordResetExpiry; // используем как время истечения кода
+    private LocalDateTime passwordResetExpiry;
+
+    @Column(name = "archived")
+    private Boolean archived = false;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
@@ -77,4 +80,6 @@ public class User {
     public void setPasswordResetToken(String passwordResetToken) { this.passwordResetToken = passwordResetToken; }
     public LocalDateTime getPasswordResetExpiry() { return passwordResetExpiry; }
     public void setPasswordResetExpiry(LocalDateTime passwordResetExpiry) { this.passwordResetExpiry = passwordResetExpiry; }
+    public Boolean getArchived() { return archived != null ? archived : false; }
+    public void setArchived(Boolean archived) { this.archived = archived; }
 }

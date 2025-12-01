@@ -1,0 +1,2 @@
+ALTER TABLE users ADD archived BIT NOT NULL DEFAULT 0;
+

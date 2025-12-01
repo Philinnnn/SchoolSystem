@@ -124,6 +124,7 @@
         <h2>Вход в систему</h2>
 
         <div th:if="${param.error}" class="error-message">Неверный логин или пароль</div>
+        <div th:if="${param.archived}" class="error-message">Ваша учётная запись архивирована. Обратитесь к администратору.</div>
         <div th:if="${param.logout}" class="success-message">Вы успешно вышли из системы</div>
         <div th:if="${tgError}" class="error-message" th:text="${tgError}"></div>
 

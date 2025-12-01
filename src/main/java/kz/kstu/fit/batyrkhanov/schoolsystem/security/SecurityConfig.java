@@ -39,10 +39,19 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, TotpVerificationFilter totpVerificationFilter) throws Exception {
+    public ArchivedUserFilter archivedUserFilter(UserRepository userRepository) {
+        return new ArchivedUserFilter(userRepository);
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                          TotpVerificationFilter totpVerificationFilter,
+                                          ArchivedUserFilter archivedUserFilter) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/login/telegram/**")
+                )
                 .authorizeHttpRequests(auth -> auth
                         // Разрешённые страницы и статические ресурсы
                         .requestMatchers("/", "/login", "/login/telegram/**", "/css/**", "/js/**", "/favicon.ico", "/error").permitAll()
@@ -69,6 +78,7 @@ public class SecurityConfig {
                 );
 
         http.addFilterAfter(totpVerificationFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(archivedUserFilter, TotpVerificationFilter.class);
 
         return http.build();
     }

@@ -38,17 +38,20 @@ public class AdminController {
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
     private final BackupService backupService;
+    private final kz.kstu.fit.batyrkhanov.schoolsystem.service.UserService userService;
 
     public AdminController(UserRepository userRepository,
                            RoleRepository roleRepository,
                            PasswordEncoder passwordEncoder,
                            AuditService auditService,
-                           BackupService backupService) {
+                           BackupService backupService,
+                           kz.kstu.fit.batyrkhanov.schoolsystem.service.UserService userService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditService = auditService;
         this.backupService = backupService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -64,6 +67,8 @@ public class AdminController {
     @GetMapping("/users")
     public String users(@RequestParam(name="q", required=false) String query,
                         @RequestParam(name="role", required=false) String roleFilter,
+                        @RequestParam(name="archived", required=false) String archivedFilter,
+                        HttpServletRequest request,
                         Model model) {
         List<User> all = userRepository.findAll();
         if (query != null && !query.isBlank()) {
@@ -73,16 +78,30 @@ public class AdminController {
         if (roleFilter != null && !roleFilter.isBlank()) {
             all = all.stream().filter(u -> u.getRoles().stream().anyMatch(r -> r.getName().equals(roleFilter))).toList();
         }
+        if (archivedFilter != null && !archivedFilter.isBlank()) {
+            if ("true".equals(archivedFilter)) {
+                all = all.stream().filter(u -> Boolean.TRUE.equals(u.getArchived())).toList();
+            } else if ("false".equals(archivedFilter)) {
+                all = all.stream().filter(u -> !Boolean.TRUE.equals(u.getArchived())).toList();
+            }
+        }
+
+        org.springframework.security.web.csrf.CsrfToken csrfToken =
+            (org.springframework.security.web.csrf.CsrfToken) request.getAttribute(org.springframework.security.web.csrf.CsrfToken.class.getName());
+        if (csrfToken != null) {
+            model.addAttribute("_csrf", csrfToken);
+        }
+
         model.addAttribute("users", all);
         model.addAttribute("roles", roleRepository.findAll());
         model.addAttribute("q", query);
         model.addAttribute("roleFilter", roleFilter);
+        model.addAttribute("archivedFilter", archivedFilter);
         return "admin/users";
     }
 
-    // Вспомогательный метод для внутренних вызовов без параметров (валидация/ошибки)
     private String users(Model model) {
-        return users(null, null, model);
+        return users(null, null, null, null, model);
     }
 
     @PostMapping("/users/create")
@@ -337,6 +356,33 @@ public class AdminController {
         }
     }
 
+    @PostMapping("/users/{id}/archive")
+    public ResponseEntity<Map<String, String>> archiveUser(@PathVariable Long id) {
+        try {
+            boolean success = userService.archiveUser(id, getCurrentUsername());
+            if (success) {
+                return ResponseEntity.ok(Map.of("success", "Пользователь архивирован"));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("error", "Не удалось архивировать пользователя"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/users/{id}/unarchive")
+    public ResponseEntity<Map<String, String>> unarchiveUser(@PathVariable Long id) {
+        try {
+            boolean success = userService.unarchiveUser(id, getCurrentUsername());
+            if (success) {
+                return ResponseEntity.ok(Map.of("success", "Пользователь разархивирован"));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("error", "Не удалось разархивировать пользователя"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     private String getCurrentUsername() {
         org.springframework.security.core.Authentication auth =
