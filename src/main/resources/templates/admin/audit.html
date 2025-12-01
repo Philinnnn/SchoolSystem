@@ -6,20 +6,57 @@
     <link rel="stylesheet" href="/css/style.css">
     <style>
         .filters { display:grid; grid-template-columns: repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin-bottom:12px; }
-        .badge { display:inline-block; padding:4px 8px; border-radius:12px; font-size:11px; font-weight:600; letter-spacing:.5px; }
+        .badge { display:inline-block; padding:4px 10px; border-radius:14px; font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; white-space:nowrap; }
+        /* Аутентификация */
         .badge.LOGIN { background:#e3f2fd; color:#0d47a1; }
-        .badge.FAIL_LOGIN { background:#eef2f5; color: #dc3545; }
+        .badge.FAIL_LOGIN { background:#ffebee; color:#c62828; }
         .badge.LOGOUT { background:#ede7f6; color:#4527a0; }
-        .badge.PASSWORD_CHANGE, .badge.PASSWORD_RESET_ADMIN { background:#e8f5e9; color:#1b5e20; }
-        .badge.ROLE_CHANGE { background:#fff3e0; color:#e65100; }
-        .badge.TOTP_ENABLE, .badge.TOTP_DISABLE { background:#f3e5f5; color:#6a1b9a; }
-        .badge.TG_LINK, .badge.TG_UNLINK, .badge.TG_LOGIN_TOKEN, .badge.TG_LOGIN_TOKEN_CONSUME, .badge.TG_LINK_CODE { background:#e1f5fe; color:#01579b; }
-        .badge.USER_CREATE, .badge.USER_UPDATE { background:#fce4ec; color:#ad1457; }
-        .badge.SETTINGS_UPDATE { background:#fffde7; color:#f57f17; }
-        .badge.BACKUP_CREATE, .badge.BACKUP_DOWNLOAD { background:#d1f2eb; color:#0e6251; }
+        /* Пароль и безопасность */
+        .badge.PASSWORD_CHANGE { background:#e8f5e9; color:#2e7d32; }
+        .badge.PASSWORD_RESET_ADMIN { background:#fff3e0; color:#e65100; }
+        /* TOTP */
+        .badge.TOTP_ENABLE { background:#f3e5f5; color:#7b1fa2; }
+        .badge.TOTP_DISABLE { background:#fce4ec; color:#c2185b; }
+        /* Telegram */
+        .badge.TG_LINK { background:#e1f5fe; color:#0277bd; }
+        .badge.TG_UNLINK { background:#e0f2f1; color:#00695c; }
+        .badge.TG_LOGIN_TOKEN { background:#e0f7fa; color:#006064; }
+        .badge.TG_LOGIN_TOKEN_CONSUME { background:#b2ebf2; color:#00838f; }
+        .badge.TG_LINK_CODE { background:#b3e5fc; color:#01579b; }
+        /* Управление пользователями */
+        .badge.USER_CREATE { background:#e8f5e9; color:#1b5e20; }
+        .badge.USER_UPDATE { background:#fff9c4; color:#f57f17; }
+        .badge.USER_FULLNAME_UPDATE { background:#fff3e0; color:#ef6c00; }
+        .badge.USER_ARCHIVE { background:#ffccbc; color:#d84315; }
+        .badge.USER_UNARCHIVE { background:#c8e6c9; color:#2e7d32; }
+        /* Роли */
+        .badge.ROLE_CHANGE { background:#ffe0b2; color:#e65100; }
+        /* Классы */
+        .badge.CREATE_CLASS { background:#e1bee7; color:#6a1b9a; }
+        .badge.UPDATE_CLASS { background:#f3e5f5; color:#8e24aa; }
+        .badge.DELETE_CLASS { background:#ffcdd2; color:#c62828; }
+        .badge.ASSIGN_STUDENT_CLASS { background:#d1c4e9; color:#5e35b1; }
+        /* Предметы */
+        .badge.CREATE_SUBJECT { background:#c5cae9; color:#3949ab; }
+        .badge.UPDATE_SUBJECT { background:#e8eaf6; color:#3f51b5; }
+        .badge.DELETE_SUBJECT { background:#ffcdd2; color:#d32f2f; }
+        /* Расписание */
+        .badge.CREATE_SCHEDULE { background:#bbdefb; color:#1565c0; }
+        .badge.UPDATE_SCHEDULE { background:#e3f2fd; color:#1976d2; }
+        .badge.DELETE_SCHEDULE { background:#ffccbc; color:#bf360c; }
+        /* Оценки */
+        .badge.GRADE_ADD { background:#c8e6c9; color:#388e3c; }
+        .badge.GRADE_UPDATE { background:#fff9c4; color:#fbc02d; }
+        .badge.GRADE_DELETE { background:#ffccbc; color:#d84315; }
+        /* Настройки */
+        .badge.SETTINGS_UPDATE { background:#fffde7; color:#f9a825; }
+        /* Бэкапы */
+        .badge.BACKUP_CREATE { background:#d1f2eb; color:#0e6251; }
+        .badge.BACKUP_DOWNLOAD { background:#d5f4e6; color:#196f3d; }
         .badge.BACKUP_DELETE { background:#fadbd8; color:#922b21; }
         .badge.BACKUP_RESTORE { background:#d4edda; color:#155724; }
-        .badge.GRADE_ADD, .badge.GRADE_UPDATE, .badge.GRADE_DELETE { background:#cfe2ff; color:#084298; }
+        /* Прочее - дефолтный стиль */
+        .badge:not([class*=" "]) { background:#ecf0f1; color:#2c3e50; }
         .table thead th { position:sticky; top:0; background:#f3f6f9; z-index:1; }
         .pagination { display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
         .pagination a { text-decoration:none; padding:6px 10px; border-radius:6px; background:#f3f6f9; color:#2c3e50; }

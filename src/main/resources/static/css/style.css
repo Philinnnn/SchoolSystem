@@ -403,6 +403,16 @@ header strong {
     transition: all 0.3s ease;
 }
 
+.password-wrapper {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.password-wrapper .input {
+    margin-bottom: 0;
+    padding-right: 50px;
+}
+
 .input:focus {
     outline: none;
     border-color: #11998e;
@@ -564,21 +574,78 @@ header .btn {
     box-shadow: none;
 }
 
-.password-toggle { width:32px; height:32px; display:flex; align-items:center; justify-content:center; top:40%; transform:translateY(-50%); }
-.password-toggle .eye { width:20px; height:12px; border:2px solid #2c3e50; border-radius:50%/60%; position:relative; transition:all .25s ease; }
-.password-toggle .eye:after { content:''; position:absolute; width:6px; height:6px; background:#2c3e50; border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); transition:all .25s ease; }
-.password-toggle.closed .eye:after { background:#11998e; }
-.password-toggle .slash { position:absolute; width:24px; height:2px; background:#c0392b; transform:rotate(35deg); opacity:0; transition:opacity .25s ease; }
-.password-toggle.closed .slash { opacity:1; }
-.password-toggle.open .slash { opacity:0; }
+.password-toggle {
+    width:32px;
+    height:32px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:absolute;
+    right:8px;
+    top:50%;
+    transform:translateY(-50%);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:0;
+}
+.password-toggle .eye {
+    width:20px;
+    height:12px;
+    border:2px solid #2c3e50;
+    border-radius:50%/60%;
+    position:relative;
+    transition:all .25s ease;
+    overflow:hidden;
+}
+.password-toggle .eye .ball {
+    position:absolute;
+    width:6px;
+    height:6px;
+    background:#2c3e50;
+    border-radius:50%;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    transition:all .25s ease;
+}
+.password-toggle .eye .lid {
+    position:absolute;
+    width:100%;
+    background:white;
+    transition:all .25s ease;
+}
+.password-toggle .eye .lid.top {
+    height:0;
+    top:0;
+    left:0;
+}
+.password-toggle .eye .lid.bottom {
+    height:0;
+    bottom:0;
+    left:0;
+}
+.password-toggle.shown .eye .lid.top {
+    height:0;
+}
+.password-toggle.shown .eye .lid.bottom {
+    height:0;
+}
+.password-toggle:not(.shown) .eye .lid.top {
+    height:50%;
+}
+.password-toggle:not(.shown) .eye .lid.bottom {
+    height:50%;
+}
 .password-toggle:hover .eye { border-color:#11998e; }
-.password-toggle.open .eye { box-shadow:0 0 4px rgba(17,153,142,.4); }
+.password-toggle.shown .eye { box-shadow:0 0 4px rgba(17,153,142,.4); }
+.password-toggle.shown .eye .ball { background:#11998e; }
 
 .policy-hints { list-style:none; margin:6px 0 10px 0; padding:0; font-size:12px; color:#7f8c8d; display:grid; gap:4px; }
 .policy-hints li { position:relative; padding-left:18px; }
-.policy-hints li:before { content:'✗'; position:absolute; left:0; top:0; color:#c0392b; }
+.policy-hints li:before { content:'x'; position:absolute; left:0; top:0; color:#c0392b; font-weight:bold; }
 .policy-hints li.ok { color:#155724; }
-.policy-hints li.ok:before { content:'✓'; color:#155724; }
+.policy-hints li.ok:before { content:'+'; color:#155724; font-weight:bold; }
 
 .pw-field { margin-bottom:18px; }
 .pw-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }

@@ -79,7 +79,7 @@
                 <td th:text="${u.fullName}"></td>
                 <td>
                     <div class="roles-box">
-                        <span th:each="r : ${u.roles}" th:text="${r.name}"></span>
+                        <span th:if="${u.role}" th:text="${u.role.name}"></span>
                     </div>
                 </td>
                 <td>
@@ -90,8 +90,8 @@
                     <form method="post" th:action="@{'/admin/users/' + ${u.id} + '/update'}" class="inline-form">
                         <input class="input" type="text" name="fullName" th:placeholder="${u.fullName}" th:value="${u.fullName}">
                         <div class="password-wrapper">
-                            <input class="input" type="password" name="newPassword" placeholder="Новый пароль" id="admin-newpw-[[${u.id}]]">
-                            <button type="button" class="password-toggle" onclick="togglePw('admin-newpw-[[${u.id}]]', this)" aria-label="Показать/скрыть пароль">
+                            <input class="input" type="password" name="newPassword" placeholder="Новый пароль" th:id="'admin-newpw-' + ${u.id}">
+                            <button type="button" class="password-toggle" th:onclick="'togglePw(\'admin-newpw-' + ${u.id} + '\', this)'" aria-label="Показать/скрыть пароль">
                                 <span class="eye"><span class="lid top"></span><span class="ball"></span><span class="lid bottom"></span></span>
                             </button>
                         </div>
@@ -99,22 +99,21 @@
                     </form>
                 </td>
                 <td>
-                    <form th:if="${u.roles.^[name=='ROLE_ADMIN']} == null" method="post" th:action="@{'/admin/users/' + ${u.id} + '/roles'}" style="display:flex; flex-direction:column; gap:6px;">
-                        <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                            <label th:each="r : ${roles}" style="display:flex; align-items:center; gap:4px; font-size:12px; background:#f3f6f9; padding:4px 6px; border-radius:6px;">
-                                <input type="checkbox" name="roles" th:value="${r.name}" th:checked="${u.roles.contains(r)}"> <span th:text="${r.name}"></span>
-                            </label>
-                        </div>
-                        <button class="btn" type="submit">Обновить роли</button>
+                    <form th:if="${u.role == null or u.role.name != 'ROLE_ADMIN'}" method="post" th:action="@{'/admin/users/' + ${u.id} + '/roles'}" style="display:flex; flex-direction:column; gap:6px;">
+                        <select class="input" name="role">
+                            <option value="">Без роли</option>
+                            <option th:each="r : ${roles}" th:value="${r.name}" th:text="${r.name}" th:selected="${u.role != null and u.role.name == r.name}"></option>
+                        </select>
+                        <button class="btn" type="submit">Обновить роль</button>
                     </form>
-                    <span th:if="${u.roles.^[name=='ROLE_ADMIN']} != null">Нельзя менять роли администратора</span>
+                    <span th:if="${u.role != null and u.role.name == 'ROLE_ADMIN'}">Нельзя менять роли администратора</span>
                 </td>
                 <td>
-                    <div th:if="${u.roles.^[name=='ROLE_ADMIN']} == null" style="display:flex; flex-direction:column; gap:6px;">
+                    <div th:if="${u.role == null or u.role.name != 'ROLE_ADMIN'}" style="display:flex; flex-direction:column; gap:6px;">
                         <button th:if="${!u.archived}" class="btn btn-archive" th:data-user-id="${u.id}" th:data-username="${u.username}" style="background:#e74c3c;">Архивировать</button>
                         <button th:if="${u.archived}" class="btn btn-unarchive" th:data-user-id="${u.id}" th:data-username="${u.username}" style="background:#27ae60;">Разархивировать</button>
                     </div>
-                    <span th:if="${u.roles.^[name=='ROLE_ADMIN']} != null" style="color:#7f8c8d; font-size:12px;">Недоступно</span>
+                    <span th:if="${u.role != null and u.role.name == 'ROLE_ADMIN'}" style="color:#7f8c8d; font-size:12px;">Недоступно</span>
                 </td>
             </tr>
             </tbody>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${schoolClass != null ? 'Редактирование класса' : 'Создание класса'}">Класс</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1 th:text="${schoolClass != null ? 'Редактирование класса' : 'Создание класса'}">Класс</h1>
+        <div>
+            <a class="btn" href="/admin/classes">← К списку классов</a>
+            <a class="btn" href="/profile" style="margin: 0 8px;">Кабинет</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2 th:text="${schoolClass != null ? 'Редактировать класс' : 'Создать новый класс'}">Форма</h2>
+
+        <div th:if="${error}" class="error-message" th:text="${error}"></div>
+
+        <form method="post"
+              th:action="${schoolClass != null ? '/admin/classes/' + schoolClass.id + '/edit' : '/admin/classes/create'}">
+
+            <div class="form-group">
+                <label for="name">Название класса *</label>
+                <input type="text"
+                       id="name"
+                       name="name"
+                       class="input"
+                       th:value="${schoolClass != null ? schoolClass.name : ''}"
+                       placeholder="Например: 10А, 11Б"
+                       required>
+                <small style="color: #666;">Название должно быть уникальным</small>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn">
+                    <span th:text="${schoolClass != null ? 'Сохранить изменения' : 'Создать класс'}">Создать</span>
+                </button>
+                <a href="/admin/classes" class="btn" style="background: #6c757d;">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
+

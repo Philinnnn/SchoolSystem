@@ -43,4 +43,15 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                                                     @Param("subjectId") Long subjectId,
                                                     @Param("className") String className,
                                                     @Param("dow") DayOfWeek dayOfWeek);
+
+    @Query("SELECT s FROM Schedule s " +
+           "JOIN FETCH s.subject " +
+           "JOIN FETCH s.teacher t " +
+           "JOIN FETCH t.user " +
+           "ORDER BY s.className ASC, s.dayOfWeek ASC, s.startTime ASC")
+    List<Schedule> findAllWithDetails();
+
+    List<Schedule> findByClassNameAndDayOfWeek(String className, DayOfWeek dayOfWeek);
+
+    List<Schedule> findByTeacherIdAndDayOfWeek(Long teacherId, DayOfWeek dayOfWeek);
 }

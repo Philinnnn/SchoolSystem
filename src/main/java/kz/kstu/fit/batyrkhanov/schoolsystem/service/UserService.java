@@ -57,8 +57,7 @@ public class UserService {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) return false;
 
-        boolean isAdmin = user.getRoles().stream()
-                .anyMatch(role -> "ROLE_ADMIN".equals(role.getName()));
+        boolean isAdmin = user.getRole() != null && "ROLE_ADMIN".equals(user.getRole().getName());
         if (isAdmin) return false;
 
         user.setArchived(true);

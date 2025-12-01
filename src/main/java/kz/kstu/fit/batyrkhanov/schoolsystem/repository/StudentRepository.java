@@ -11,6 +11,7 @@ import java.util.List;
 public interface StudentRepository extends JpaRepository<Student, Long> {
     Student findByUserId(Long userId);
     List<Student> findByClassName(String className);
+    List<Student> findByClassNameIsNull();
 
     @Query("SELECT DISTINCT s.className FROM Student s WHERE s.className IS NOT NULL ORDER BY s.className ASC")
     List<String> findDistinctClassNames();

@@ -3,8 +3,14 @@ package kz.kstu.fit.batyrkhanov.schoolsystem.controller;
 import kz.kstu.fit.batyrkhanov.schoolsystem.entity.AuditLog;
 import kz.kstu.fit.batyrkhanov.schoolsystem.entity.Role;
 import kz.kstu.fit.batyrkhanov.schoolsystem.entity.User;
+import kz.kstu.fit.batyrkhanov.schoolsystem.entity.Student;
+import kz.kstu.fit.batyrkhanov.schoolsystem.entity.Teacher;
+import kz.kstu.fit.batyrkhanov.schoolsystem.entity.Director;
 import kz.kstu.fit.batyrkhanov.schoolsystem.repository.RoleRepository;
 import kz.kstu.fit.batyrkhanov.schoolsystem.repository.UserRepository;
+import kz.kstu.fit.batyrkhanov.schoolsystem.repository.StudentRepository;
+import kz.kstu.fit.batyrkhanov.schoolsystem.repository.TeacherRepository;
+import kz.kstu.fit.batyrkhanov.schoolsystem.repository.DirectorRepository;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.AuditService;
 import kz.kstu.fit.batyrkhanov.schoolsystem.service.BackupService;
 import org.apache.poi.ss.usermodel.Row;
@@ -35,6 +41,9 @@ import java.util.*;
 public class AdminController {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final StudentRepository studentRepository;
+    private final TeacherRepository teacherRepository;
+    private final DirectorRepository directorRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
     private final BackupService backupService;
@@ -42,12 +51,18 @@ public class AdminController {
 
     public AdminController(UserRepository userRepository,
                            RoleRepository roleRepository,
+                           StudentRepository studentRepository,
+                           TeacherRepository teacherRepository,
+                           DirectorRepository directorRepository,
                            PasswordEncoder passwordEncoder,
                            AuditService auditService,
                            BackupService backupService,
                            kz.kstu.fit.batyrkhanov.schoolsystem.service.UserService userService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.studentRepository = studentRepository;
+        this.teacherRepository = teacherRepository;
+        this.directorRepository = directorRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditService = auditService;
         this.backupService = backupService;
@@ -76,7 +91,7 @@ public class AdminController {
             all = all.stream().filter(u -> u.getUsername()!=null && u.getUsername().toLowerCase().contains(ql)).toList();
         }
         if (roleFilter != null && !roleFilter.isBlank()) {
-            all = all.stream().filter(u -> u.getRoles().stream().anyMatch(r -> r.getName().equals(roleFilter))).toList();
+            all = all.stream().filter(u -> u.getRole() != null && u.getRole().getName().equals(roleFilter)).toList();
         }
         if (archivedFilter != null && !archivedFilter.isBlank()) {
             if ("true".equals(archivedFilter)) {
@@ -122,9 +137,27 @@ public class AdminController {
         User user = new User(username, passwordEncoder.encode(password), fullName);
         if (StringUtils.hasText(roleName)) {
             Role r = roleRepository.findByName(roleName);
-            if (r != null) user.getRoles().add(r);
+            if (r != null) user.setRole(r);
         }
         userRepository.save(user);
+
+        // Автоматически создаём запись в соответствующей таблице по роли
+        if (StringUtils.hasText(roleName)) {
+            if ("ROLE_STUDENT".equals(roleName)) {
+                Student student = new Student();
+                student.setUser(user);
+                studentRepository.save(student);
+            } else if ("ROLE_TEACHER".equals(roleName)) {
+                Teacher teacher = new Teacher();
+                teacher.setUser(user);
+                teacherRepository.save(teacher);
+            } else if ("ROLE_DIRECTOR".equals(roleName)) {
+                Director director = new Director();
+                director.setUser(user);
+                directorRepository.save(director);
+            }
+        }
+
         auditService.log("USER_CREATE", username, "User created role=" + roleName, request);
         return "redirect:/admin/users";
     }
@@ -136,7 +169,7 @@ public class AdminController {
                              HttpServletRequest request) {
         User user = userRepository.findById(id).orElse(null);
         if (user == null) return "redirect:/admin/users";
-        boolean isAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));
+        boolean isAdmin = user.getRole() != null && "ROLE_ADMIN".equals(user.getRole().getName());
         // Разрешаем менять ФИО у всех; пароль админа менять можно, но логируем отдельно
         boolean changed = false;
         if (fullName != null && !fullName.isBlank() && !Objects.equals(fullName, user.getFullName())) {
@@ -163,23 +196,52 @@ public class AdminController {
 
     @PostMapping("/users/{id}/roles")
     public String updateRoles(@PathVariable Long id,
-                              @RequestParam(name = "roles", required = false) List<String> roleNames,
+                              @RequestParam(name = "role", required = false) String roleName,
                               HttpServletRequest request) {
         User user = userRepository.findById(id).orElse(null);
         if (user == null) return "redirect:/admin/users";
-        boolean isAdmin = user.getRoles().stream().anyMatch(r -> "ROLE_ADMIN".equals(r.getName()));
+        boolean isAdmin = user.getRole() != null && "ROLE_ADMIN".equals(user.getRole().getName());
         if (isAdmin) return "redirect:/admin/users"; // не менять роли админа
-        Set<Role> newRoles = new HashSet<>();
-        if (roleNames != null) {
-            for (String rn : roleNames) {
-                if ("ROLE_ADMIN".equals(rn)) continue;
-                Role r = roleRepository.findByName(rn);
-                if (r != null) newRoles.add(r);
+
+        String oldRoleName = user.getRole() != null ? user.getRole().getName() : null;
+
+        if (roleName != null && !roleName.isBlank()) {
+            if ("ROLE_ADMIN".equals(roleName)) return "redirect:/admin/users";
+            Role r = roleRepository.findByName(roleName);
+            if (r != null) {
+                // Удаляем старые записи в специализированных таблицах
+                if (oldRoleName != null) {
+                    if ("ROLE_STUDENT".equals(oldRoleName)) {
+                        studentRepository.deleteById(user.getId());
+                    } else if ("ROLE_TEACHER".equals(oldRoleName)) {
+                        teacherRepository.deleteById(user.getId());
+                    } else if ("ROLE_DIRECTOR".equals(oldRoleName)) {
+                        directorRepository.deleteById(user.getId());
+                    }
+                }
+
+                // Устанавливаем новую роль
+                user.setRole(r);
+                userRepository.save(user);
+
+                // Создаём новые записи в специализированных таблицах
+                if ("ROLE_STUDENT".equals(roleName)) {
+                    Student student = new Student();
+                    student.setUser(user);
+                    studentRepository.save(student);
+                } else if ("ROLE_TEACHER".equals(roleName)) {
+                    Teacher teacher = new Teacher();
+                    teacher.setUser(user);
+                    teacherRepository.save(teacher);
+                } else if ("ROLE_DIRECTOR".equals(roleName)) {
+                    Director director = new Director();
+                    director.setUser(user);
+                    directorRepository.save(director);
+                }
+
+                auditService.log("ROLE_CHANGE", user.getUsername(), "Role changed from " + oldRoleName + " to " + r.getName(), request);
             }
         }
-        user.setRoles(newRoles);
-        userRepository.save(user);
-        auditService.log("ROLE_CHANGE", user.getUsername(), "Roles=" + newRoles.stream().map(Role::getName).toList(), request);
         return "redirect:/admin/users";
     }
 

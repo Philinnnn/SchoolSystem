@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Информация об учителе — Панель директора</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .info-block {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .subject-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin: 5px 5px 5px 0;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Информация об учителе</h1>
+        <div>
+            <a class="btn" href="/director/teachers">← К списку</a>
+            <a class="btn" href="/profile" style="margin: 0 8px;">Кабинет</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2 th:text="${teacher.user.fullName}">Имя учителя</h2>
+
+        <div class="info-block">
+            <p><strong>ID:</strong> <span th:text="${teacher.id}">1</span></p>
+            <p><strong>Логин:</strong> <span th:text="${teacher.user.username}">login</span></p>
+            <p><strong>Полное имя:</strong> <span th:text="${teacher.user.fullName}">Full Name</span></p>
+        </div>
+
+        <h3 style="margin-top: 30px;">Преподаваемые предметы</h3>
+        <div th:if="${not #lists.isEmpty(teacher.subjects)}">
+            <span th:each="subject : ${teacher.subjects}" class="subject-badge" th:text="${subject.name}">Предмет</span>
+        </div>
+        <div th:if="${#lists.isEmpty(teacher.subjects)}" style="color: #999; font-style: italic; margin: 20px 0;">
+            Предметы не назначены
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

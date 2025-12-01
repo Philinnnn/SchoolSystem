@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${subject != null ? 'Редактирование предмета' : 'Создание предмета'}">Предмет</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1 th:text="${subject != null ? 'Редактирование предмета' : 'Создание предмета'}">Предмет</h1>
+        <div>
+            <a class="btn" href="/director/subjects">← К списку</a>
+            <a class="btn" href="/profile" style="margin: 0 8px;">Кабинет</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2 th:text="${subject != null ? 'Редактировать предмет' : 'Создать новый предмет'}">Форма</h2>
+
+        <div th:if="${error}" class="error-message" th:text="${error}"></div>
+
+        <form method="post"
+              th:action="${subject != null ? '/director/subjects/' + subject.id + '/edit' : '/director/subjects/create'}">
+
+            <label for="name">Название предмета *</label>
+            <input type="text"
+                   id="name"
+                   name="name"
+                   class="input"
+                   th:value="${subject != null ? subject.name : ''}"
+                   placeholder="Например: Математика"
+                   required>
+
+            <label for="description">Описание</label>
+            <textarea id="description"
+                      name="description"
+                      class="input"
+                      rows="4"
+                      th:text="${subject != null ? subject.description : ''}"
+                      placeholder="Краткое описание предмета (необязательно)"></textarea>
+
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn" th:text="${subject != null ? 'Сохранить изменения' : 'Создать предмет'}">Сохранить</button>
+                <a href="/director/subjects" class="btn" style="background: #6c757d;">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
+

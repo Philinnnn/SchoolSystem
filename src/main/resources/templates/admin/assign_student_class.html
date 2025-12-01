@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Назначение студентов в классы — Админ панель</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .student-card {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .student-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .student-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        .current-class {
+            padding: 5px 12px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        .no-class {
+            padding: 5px 12px;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        .assign-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Назначение студентов в классы</h1>
+        <div>
+            <a class="btn" href="/admin">← К панели</a>
+            <a class="btn" href="/admin/classes" style="margin: 0 8px;">Классы</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2>Студенты без класса</h2>
+
+        <div th:if="${success}" style="background: #d4edda; color: #155724; padding: 12px; border-radius: 6px; margin-bottom: 15px;" th:text="${success}"></div>
+        <div th:if="${error}" style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 6px; margin-bottom: 15px;" th:text="${error}"></div>
+
+        <div th:if="${#lists.isEmpty(studentsWithoutClass)}" style="text-align: center; padding: 40px; color: #999;">
+            <p>Все студенты назначены в классы</p>
+        </div>
+
+        <div th:each="student : ${studentsWithoutClass}" class="student-card">
+            <div class="student-info">
+                <div>
+                    <div class="student-name" th:text="${student.user.fullName}">Имя студента</div>
+                    <small style="color: #666;" th:text="'Логин: ' + ${student.user.username}">Логин</small>
+                </div>
+                <span class="no-class">Без класса</span>
+            </div>
+            <form method="post" th:action="@{/admin/students/{id}/assign-class(id=${student.id})}" class="assign-form">
+                <select name="className" class="input" style="width: auto;" required>
+                    <option value="">Выберите класс</option>
+                    <option th:each="class : ${classes}" th:value="${class.name}" th:text="${class.name}">10А</option>
+                </select>
+                <button type="submit" class="btn">Назначить</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h2>Студенты по классам</h2>
+
+        <div th:each="class : ${classes}" style="margin-bottom: 30px;">
+            <h3 th:text="${class.name}" style="color: #667eea; margin-bottom: 15px;">10А</h3>
+
+            <div th:with="classStudents=${#lists.isEmpty(classes) ? {} : @adminService.getStudentsByClassName(class.name)}">
+                <div th:if="${#lists.isEmpty(classStudents)}" style="color: #999; font-style: italic; padding: 10px;">
+                    В этом классе нет студентов
+                </div>
+
+                <div th:each="student : ${classStudents}" class="student-card">
+                    <div class="student-info">
+                        <div>
+                            <div class="student-name" th:text="${student.user.fullName}">Имя студента</div>
+                            <small style="color: #666;" th:text="'Логин: ' + ${student.user.username}">Логин</small>
+                        </div>
+                        <span class="current-class" th:text="${student.className}">10А</span>
+                    </div>
+                    <form method="post" th:action="@{/admin/students/{id}/assign-class(id=${student.id})}" class="assign-form">
+                        <select name="className" class="input" style="width: auto;">
+                            <option value="">Убрать из класса</option>
+                            <option th:each="c : ${classes}"
+                                    th:value="${c.name}"
+                                    th:text="${c.name}"
+                                    th:selected="${c.name == student.className}">10А</option>
+                        </select>
+                        <button type="submit" class="btn">Изменить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+

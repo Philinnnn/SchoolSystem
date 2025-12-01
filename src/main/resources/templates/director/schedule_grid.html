@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Расписание — Панель директора</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .filter-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .schedule-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .schedule-grid th,
+        .schedule-grid td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: top;
+        }
+        .schedule-grid th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .schedule-grid th.time-header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .lesson-cell {
+            min-height: 80px;
+            padding: 8px;
+            position: relative;
+        }
+        .lesson-item {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 4px solid #1976d2;
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .lesson-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+        .lesson-subject {
+            font-weight: 600;
+            color: #1565c0;
+            margin-bottom: 3px;
+        }
+        .lesson-teacher {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .lesson-room {
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 2px;
+        }
+        .lesson-actions {
+            margin-top: 5px;
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+        .lesson-actions .btn {
+            padding: 3px 8px;
+            font-size: 0.75em;
+        }
+        .delete-btn {
+            background: #dc3545 !important;
+        }
+        .delete-btn:hover {
+            background: #c82333 !important;
+        }
+        .empty-cell {
+            color: #ccc;
+            font-style: italic;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Расписание занятий</h1>
+        <div>
+            <a class="btn" href="/director">← К панели</a>
+            <a class="btn" href="/profile" style="margin: 0 8px;">Кабинет</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>Расписание по дням</h2>
+            <a href="/director/schedule/create" class="btn">+ Добавить занятие</a>
+        </div>
+
+        <div th:if="${success}" style="background: #d4edda; color: #155724; padding: 12px; border-radius: 6px; margin-bottom: 15px;" th:text="${success}"></div>
+        <div th:if="${error}" style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 6px; margin-bottom: 15px;" th:text="${error}"></div>
+
+        <div class="filter-section">
+            <h3>Выберите класс для просмотра расписания</h3>
+            <form method="get" action="/director/schedule" class="filter-form">
+                <select name="className" class="input" style="width: auto;" required>
+                    <option value="" th:selected="${selectedClass == null}">-- Выберите класс --</option>
+                    <option th:each="cn : ${classNames}"
+                            th:value="${cn}"
+                            th:text="${cn}"
+                            th:selected="${cn == selectedClass}">10А</option>
+                </select>
+                <button type="submit" class="btn">Показать расписание</button>
+            </form>
+        </div>
+
+        <div th:if="${selectedClass == null}" style="text-align: center; padding: 40px; color: #999;">
+            <p>📅 Пожалуйста, выберите класс для просмотра расписания</p>
+        </div>
+
+        <div th:if="${selectedClass != null && #lists.isEmpty(schedules)}" style="text-align: center; padding: 40px; color: #999;">
+            <p>Расписание для класса <strong th:text="${selectedClass}">10А</strong> пока не создано</p>
+        </div>
+
+        <div th:if="${selectedClass != null && !#lists.isEmpty(schedules)}">
+            <table class="schedule-grid">
+                <thead>
+                    <tr>
+                        <th class="time-header">Время</th>
+                        <th>Понедельник</th>
+                        <th>Вторник</th>
+                        <th>Среда</th>
+                        <th>Четверг</th>
+                        <th>Пятница</th>
+                        <th>Суббота</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="timeSlot : ${timeSlots}">
+                        <td class="time-header">
+                            <strong th:text="${timeSlot}">08:00</strong>
+                        </td>
+                        <td th:each="day : ${daysList}" class="lesson-cell">
+                            <div th:if="${scheduleGrid.containsKey(day.name() + '_' + timeSlot)}">
+                                <div th:each="lesson : ${scheduleGrid.get(day.name() + '_' + timeSlot)}" class="lesson-item">
+                                    <div class="lesson-subject" th:text="${lesson.subject.name}">Математика</div>
+                                    <div class="lesson-teacher" th:text="${lesson.teacher.user.fullName}">Иванов И.И.</div>
+                                    <div class="lesson-room" th:if="${lesson.roomNumber != null}" th:text="'Каб. ' + ${lesson.roomNumber}">Каб. 301</div>
+                                    <div class="lesson-actions">
+                                        <a th:href="@{/director/schedule/{id}/edit(id=${lesson.id})}" class="btn">✏️</a>
+                                        <form method="post" th:action="@{/director/schedule/{id}/delete(id=${lesson.id})}"
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Удалить это занятие?');">
+                                            <button type="submit" class="btn delete-btn">🗑️</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:unless="${scheduleGrid.containsKey(day.name() + '_' + timeSlot)}" class="empty-cell">
+                                —
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

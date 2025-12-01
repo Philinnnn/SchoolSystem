@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Предметы — Панель директора</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .subject-card {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .subject-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .subject-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .subject-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .delete-btn {
+            background: #dc3545 !important;
+        }
+        .delete-btn:hover {
+            background: #c82333 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Предметы</h1>
+        <div>
+            <a class="btn" href="/director">← К панели</a>
+            <a class="btn" href="/profile" style="margin: 0 8px;">Кабинет</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>Список предметов</h2>
+            <a href="/director/subjects/create" class="btn">+ Создать предмет</a>
+        </div>
+
+        <div th:if="${success}" class="success-message" th:text="${success}"></div>
+        <div th:if="${error}" class="error-message" th:text="${error}"></div>
+
+        <p>Всего предметов: <strong th:text="${#lists.size(subjects)}">0</strong></p>
+
+        <div th:if="${#lists.isEmpty(subjects)}" style="text-align: center; padding: 40px; color: #999;">
+            <p>Предметы не найдены</p>
+        </div>
+
+        <div th:each="subject : ${subjects}" class="subject-card">
+            <div class="subject-header">
+                <div>
+                    <h3 th:text="${subject.name}">Название предмета</h3>
+                    <p style="color: #666; margin-top: 5px;" th:text="${subject.description}">Описание предмета</p>
+                </div>
+                <div class="subject-actions">
+                    <a th:href="@{/director/subjects/{id}/edit(id=${subject.id})}" class="btn">✏️ Изменить</a>
+                    <form method="post" th:action="@{/director/subjects/{id}/delete(id=${subject.id})}"
+                          style="display: inline;"
+                          onsubmit="return confirm('Вы уверены, что хотите удалить этот предмет?');">
+                        <button type="submit" class="btn delete-btn">🗑️ Удалить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+

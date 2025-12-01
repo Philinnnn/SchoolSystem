@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${schedule != null ? 'Редактирование занятия' : 'Добавление занятия'}">Занятие в расписании</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1 th:text="${schedule != null ? 'Редактирование занятия' : 'Добавление занятия'}">Занятие</h1>
+        <div>
+            <a class="btn" href="/director/schedule">← К расписанию</a>
+            <a class="btn" href="/profile" style="margin: 0 8px;">Кабинет</a>
+            <form method="post" th:action="@{/logout}" style="display: inline;">
+                <button class="btn" type="submit">Выйти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="card">
+        <h2 th:text="${schedule != null ? 'Редактировать занятие' : 'Добавить новое занятие'}">Форма</h2>
+
+        <div th:if="${error}" class="error-message" th:text="${error}"></div>
+
+        <form method="post"
+              th:action="${schedule != null ? '/director/schedule/' + schedule.id + '/edit' : '/director/schedule/create'}">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="className">Класс *</label>
+                    <select id="className" name="className" class="input" required>
+                        <option value="">Выберите класс</option>
+                        <option th:each="cn : ${classNames}"
+                                th:value="${cn}"
+                                th:text="${cn}"
+                                th:selected="${schedule != null && schedule.className == cn}">10А</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="dayOfWeek">День недели *</label>
+                    <select id="dayOfWeek" name="dayOfWeek" class="input" required>
+                        <option value="">Выберите день</option>
+                        <option value="MONDAY" th:selected="${schedule != null && schedule.dayOfWeek.name() == 'MONDAY'}">Понедельник</option>
+                        <option value="TUESDAY" th:selected="${schedule != null && schedule.dayOfWeek.name() == 'TUESDAY'}">Вторник</option>
+                        <option value="WEDNESDAY" th:selected="${schedule != null && schedule.dayOfWeek.name() == 'WEDNESDAY'}">Среда</option>
+                        <option value="THURSDAY" th:selected="${schedule != null && schedule.dayOfWeek.name() == 'THURSDAY'}">Четверг</option>
+                        <option value="FRIDAY" th:selected="${schedule != null && schedule.dayOfWeek.name() == 'FRIDAY'}">Пятница</option>
+                        <option value="SATURDAY" th:selected="${schedule != null && schedule.dayOfWeek.name() == 'SATURDAY'}">Суббота</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="subjectId">Предмет *</label>
+                <select id="subjectId" name="subjectId" class="input" required>
+                    <option value="">Выберите предмет</option>
+                    <option th:each="subject : ${subjects}"
+                            th:value="${subject.id}"
+                            th:text="${subject.name}"
+                            th:selected="${schedule != null && schedule.subject.id == subject.id}">Математика</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="teacherId">Учитель *</label>
+                <select id="teacherId" name="teacherId" class="input" required>
+                    <option value="">Выберите учителя</option>
+                    <option th:each="teacher : ${teachers}"
+                            th:value="${teacher.id}"
+                            th:text="${teacher.user.fullName}"
+                            th:selected="${schedule != null && schedule.teacher.id == teacher.id}">Иванов И.И.</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="startTime">Время начала *</label>
+                    <input type="time"
+                           id="startTime"
+                           name="startTime"
+                           class="input"
+                           th:value="${schedule != null ? #temporals.format(schedule.startTime, 'HH:mm') : ''}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="endTime">Время окончания *</label>
+                    <input type="time"
+                           id="endTime"
+                           name="endTime"
+                           class="input"
+                           th:value="${schedule != null ? #temporals.format(schedule.endTime, 'HH:mm') : ''}"
+                           required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="roomNumber">Номер кабинета</label>
+                <input type="text"
+                       id="roomNumber"
+                       name="roomNumber"
+                       class="input"
+                       th:value="${schedule != null ? schedule.roomNumber : ''}"
+                       placeholder="Например: 301">
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn" th:text="${schedule != null ? 'Сохранить изменения' : 'Добавить занятие'}">Сохранить</button>
+                <a href="/director/schedule" class="btn" style="background: #6c757d;">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
+
