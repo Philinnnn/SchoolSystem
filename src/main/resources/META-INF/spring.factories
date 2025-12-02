@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+  kz.kstu.fit.batyrkhanov.schoolsystem.config.EnvLoader

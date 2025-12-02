@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -44,14 +45,39 @@ public class SecurityConfig {
     }
 
     @Bean
+    public RateLimitingFilter rateLimitingFilter() { return new RateLimitingFilter(); }
+
+    @Bean
+    public SimpleWafFilter simpleWafFilter(@org.springframework.beans.factory.annotation.Value("${waf.enabled:true}") boolean enabled) {
+        return new SimpleWafFilter(enabled);
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                           TotpVerificationFilter totpVerificationFilter,
-                                          ArchivedUserFilter archivedUserFilter) throws Exception {
+                                          ArchivedUserFilter archivedUserFilter,
+                                          RateLimitingFilter rateLimitingFilter,
+                                          SimpleWafFilter simpleWafFilter) throws Exception {
 
         http
+                // CSRF: игнорируем Telegram эндпоинты
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/login/telegram/**")
                 )
+                // Заголовки безопасности (блочный стиль)
+                .headers(headers -> {
+                    headers.httpStrictTransportSecurity(hsts -> hsts
+                            .includeSubDomains(true)
+                            .maxAgeInSeconds(31536000)
+                    );
+                    headers.contentTypeOptions(Customizer.withDefaults()); // X-Content-Type-Options: nosniff
+                    headers.frameOptions(frame -> frame.sameOrigin()); // X-Frame-Options: SAMEORIGIN (или .deny())
+                    headers.referrerPolicy(ref -> ref.policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN));
+                    headers.permissionsPolicy(pp -> pp.policy("geolocation=(), microphone=(), camera=(), fullscreen=(self)"));
+                    headers.contentSecurityPolicy(csp -> csp
+                            .policyDirectives("default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'")
+                    );
+                })
                 .authorizeHttpRequests(auth -> auth
                         // Разрешённые страницы и статические ресурсы
                         .requestMatchers("/", "/login", "/login/telegram/**", "/css/**", "/js/**", "/favicon.ico", "/error").permitAll()
@@ -77,6 +103,9 @@ public class SecurityConfig {
                         .permitAll()
                 );
 
+        // WAF и rate limiting: вставляем оба перед UsernamePasswordAuthenticationFilter
+        http.addFilterBefore(simpleWafFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterAfter(totpVerificationFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterAfter(archivedUserFilter, TotpVerificationFilter.class);
 
