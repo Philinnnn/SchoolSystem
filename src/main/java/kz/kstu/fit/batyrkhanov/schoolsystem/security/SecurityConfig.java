@@ -60,9 +60,9 @@ public class SecurityConfig {
                                           SimpleWafFilter simpleWafFilter) throws Exception {
 
         http
-                // CSRF: игнорируем Telegram эндпоинты
+                // CSRF: игнорируем Telegram + Backup эндпоинты
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/login/telegram/**")
+                        .ignoringRequestMatchers("/login/telegram/**", "/admin/backups/**")
                 )
                 // Заголовки безопасности (блочный стиль)
                 .headers(headers -> {

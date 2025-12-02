@@ -22,7 +22,7 @@ public class SimpleWafFilter extends OncePerRequestFilter {
     public SimpleWafFilter(boolean enabled) {
         this.enabled = enabled;
 
-        denyPatterns.add(Pattern.compile("(?i)(union\\s+select|select\\s+\\*\\s+from|information_schema|drop\\s+table|--|;\\s*shutdown)"));
+        denyPatterns.add(Pattern.compile("(?i)(union\\s+select|select\\s+\\*\\s+from|information_schema|drop\\s+table|;\\s*shutdown)"));
         denyPatterns.add(Pattern.compile("(?i)<script[^>]*>"));
         denyPatterns.add(Pattern.compile("(?i)%3Cscript")); // URL-encoded <script>
         denyPatterns.add(Pattern.compile("(?i)onerror\\s*=|onload\\s*=|javascript:"));

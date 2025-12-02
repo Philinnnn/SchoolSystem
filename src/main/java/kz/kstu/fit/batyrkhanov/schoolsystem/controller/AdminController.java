@@ -392,11 +392,21 @@ public class AdminController {
         }
     }
 
+    @GetMapping("/backups/create")
+    public String createBackupGet(HttpServletRequest request) {
+        try {
+            String backupPath = backupService.createBackup();
+            auditService.log("BACKUP_CREATE", getCurrentUsername(), "Created backup: " + backupPath, request);
+            return "redirect:/admin/backups?success=" + java.net.URLEncoder.encode("Бэкап успешно создан", java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return "redirect:/admin/backups?error=" + java.net.URLEncoder.encode("Ошибка создания бэкапа: " + e.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+    }
+
     @GetMapping("/backups/download/{filename}")
     public ResponseEntity<byte[]> downloadBackup(@PathVariable String filename, HttpServletRequest request) {
         try {
-            java.io.File file = backupService.getBackupFile(filename);
-            byte[] data = java.nio.file.Files.readAllBytes(file.toPath());
+            byte[] data = backupService.readBackup(filename);
             auditService.log("BACKUP_DOWNLOAD", getCurrentUsername(), "Downloaded backup: " + filename, request);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
@@ -410,9 +420,13 @@ public class AdminController {
     @PostMapping("/backups/delete/{filename}")
     public String deleteBackup(@PathVariable String filename, HttpServletRequest request) {
         try {
-            backupService.deleteBackup(filename);
-            auditService.log("BACKUP_DELETE", getCurrentUsername(), "Deleted backup: " + filename, request);
-            return "redirect:/admin/backups?success=" + java.net.URLEncoder.encode("Бэкап удалён", java.nio.charset.StandardCharsets.UTF_8);
+            boolean ok = backupService.deleteBackupAny(filename);
+            if (ok) {
+                auditService.log("BACKUP_DELETE", getCurrentUsername(), "Deleted backup: " + filename, request);
+                return "redirect:/admin/backups?success=" + java.net.URLEncoder.encode("Бэкап удалён", java.nio.charset.StandardCharsets.UTF_8);
+            } else {
+                return "redirect:/admin/backups?error=" + java.net.URLEncoder.encode("Бэкап не найден", java.nio.charset.StandardCharsets.UTF_8);
+            }
         } catch (Exception e) {
             return "redirect:/admin/backups?error=" + java.net.URLEncoder.encode("Ошибка удаления: " + e.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
         }

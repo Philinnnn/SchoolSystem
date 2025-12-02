@@ -1,5 +1,6 @@
 package kz.kstu.fit.batyrkhanov.schoolsystem.config;
 
+import kz.kstu.fit.batyrkhanov.schoolsystem.service.BackupService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,12 @@ import java.nio.file.Paths;
 
 @Component
 public class BackupDirectoryInitializer implements CommandLineRunner {
+
+    private final BackupService backupService;
+
+    public BackupDirectoryInitializer(BackupService backupService) {
+        this.backupService = backupService;
+    }
 
     @Override
     public void run(String... args) {
@@ -22,6 +29,9 @@ public class BackupDirectoryInitializer implements CommandLineRunner {
         } catch (IOException e) {
             System.err.println("⚠️ Failed to create backup directory: " + e.getMessage());
         }
+
+        // Проверяем возможности бэкапа
+        backupService.checkBackupCapabilities();
     }
 }
 
