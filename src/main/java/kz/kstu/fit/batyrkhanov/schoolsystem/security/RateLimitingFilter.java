@@ -39,6 +39,17 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        String method = request.getMethod();
+
+        if ("GET".equalsIgnoreCase(method) || "HEAD".equalsIgnoreCase(method) || "OPTIONS".equalsIgnoreCase(method)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (pathMatcher.match("/admin/**", path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (isStatic(path)) {
             filterChain.doFilter(request, response);
@@ -72,7 +83,31 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     }
 
     private boolean isStatic(String path) {
-        return path.startsWith("/css/") || path.startsWith("/js/") || "/favicon.ico".equals(path) || path.startsWith("/images/") || path.startsWith("/static/");
+        // Каталоги статики
+        if (pathMatcher.match("/css/**", path) ||
+            pathMatcher.match("/js/**", path) ||
+            pathMatcher.match("/images/**", path) ||
+            pathMatcher.match("/static/**", path) ||
+            pathMatcher.match("/public/**", path) ||
+            pathMatcher.match("/resources/**", path) ||
+            pathMatcher.match("/webjars/**", path) ||
+            pathMatcher.match("/assets/**", path) ||
+            "/favicon.ico".equals(path)) {
+            return true;
+        }
+        // Файлы по расширениям
+        return pathMatcher.match("/**/*.js", path) ||
+               pathMatcher.match("/**/*.css", path) ||
+               pathMatcher.match("/**/*.map", path) ||
+               pathMatcher.match("/**/*.png", path) ||
+               pathMatcher.match("/**/*.jpg", path) ||
+               pathMatcher.match("/**/*.jpeg", path) ||
+               pathMatcher.match("/**/*.svg", path) ||
+               pathMatcher.match("/**/*.ico", path) ||
+               pathMatcher.match("/**/*.gif", path) ||
+               pathMatcher.match("/**/*.woff", path) ||
+               pathMatcher.match("/**/*.woff2", path) ||
+               pathMatcher.match("/**/*.ttf", path);
     }
 
     /**
@@ -115,4 +150,3 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         return request.getRemoteAddr();
     }
 }
-

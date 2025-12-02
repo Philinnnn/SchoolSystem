@@ -75,7 +75,7 @@ public class SecurityConfig {
                     headers.referrerPolicy(ref -> ref.policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN));
                     headers.permissionsPolicy(pp -> pp.policy("geolocation=(), microphone=(), camera=(), fullscreen=(self)"));
                     headers.contentSecurityPolicy(csp -> csp
-                            .policyDirectives("default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'")
+                            .policyDirectives("default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'unsafe-inline'; script-src-elem 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'")
                     );
                 })
                 .authorizeHttpRequests(auth -> auth
@@ -103,7 +103,6 @@ public class SecurityConfig {
                         .permitAll()
                 );
 
-        // WAF и rate limiting: вставляем оба перед UsernamePasswordAuthenticationFilter
         http.addFilterBefore(simpleWafFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterAfter(totpVerificationFilter, UsernamePasswordAuthenticationFilter.class);

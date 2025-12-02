@@ -18,6 +18,13 @@ public class BackupService {
     @Value("${spring.datasource.url}")
     private String dbUrl;
 
+    // Серверный каталог, куда SQL Server пишет .bak (локальный для сервера БД)
+    @Value("${backup.serverDir:C:\\Backups}")
+    private String serverBackupDir;
+    // Имя SMB-шары на сервере БД (например, "Backups"), чтобы прочитать файл через UNC
+    @Value("${backup.serverShare:Backups}")
+    private String serverShareName;
+
     private final DataSource dataSource;
 
     public BackupService(DataSource dataSource) {
@@ -41,48 +48,39 @@ public class BackupService {
 
         Files.createDirectories(Paths.get(BACKUP_DIR));
         Path localBackupPath = Paths.get(BACKUP_DIR, backupFileName).toAbsolutePath();
-        String serverBackupPath = "C:\\Backups\\" + backupFileName;
+        String serverBackupPath = Paths.get(serverBackupDir, backupFileName).toString();
 
         System.out.println("Creating backup on server at: " + serverBackupPath);
         System.out.println("Will save locally to: " + localBackupPath);
 
-        try (Connection conn = dataSource.getConnection()) {
-            try (Statement stmt = conn.createStatement()) {
-                stmt.execute("EXEC xp_cmdshell 'mkdir C:\\Backups'");
-            } catch (Exception ignored) {
-            }
-
-            String backupSql = String.format(
+        // Делаем BACKUP DATABASE на сервере БД
+        String backupSql = String.format(
                 "BACKUP DATABASE [%s] TO DISK = N'%s' WITH FORMAT, INIT, NAME = N'%s-Full Database Backup'",
-                dbName, serverBackupPath, dbName
-            );
+                dbName, serverBackupPath.replace("\\", "\\\\"), dbName
+        );
+        System.out.println("Executing SQL: " + backupSql);
+        try (Connection conn = dataSource.getConnection(); Statement stmt = conn.createStatement()) {
+            stmt.execute(backupSql);
+        }
 
-            System.out.println("Executing SQL: " + backupSql);
-
-            try (Statement stmt = conn.createStatement()) {
-                stmt.execute(backupSql);
-            }
-
-            System.out.println("Backup created on server, now reading file...");
-
-            String readSql = String.format(
-                "SELECT BulkColumn FROM OPENROWSET(BULK N'%s', SINGLE_BLOB) AS BackupFile",
-                serverBackupPath
-            );
-
-            try (Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery(readSql)) {
-                if (rs.next()) {
-                    byte[] fileData = rs.getBytes(1);
-                    Files.write(localBackupPath, fileData);
-                    System.out.println("Backup saved locally: " + localBackupPath);
-                    System.out.println("File size: " + Files.size(localBackupPath) + " bytes");
-                    return localBackupPath.toString();
-                } else {
-                    throw new Exception("Could not read backup file from server");
-                }
+        // Пытаемся прочитать файл через UNC: \\<db-host>\\<share>\\backupFileName
+        String host = extractHost(dbUrl);
+        if (host != null) {
+            String unc = "\\\\" + host + "\\" + serverShareName + "\\" + backupFileName;
+            Path uncPath = Paths.get(unc);
+            try {
+                System.out.println("Attempting to copy from UNC: " + unc);
+                Files.copy(uncPath, localBackupPath, StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("Backup saved locally: " + localBackupPath);
+                return localBackupPath.toString();
+            } catch (Exception e) {
+                System.err.println("UNC copy failed: " + e.getMessage());
+                // Возвращаем серверный путь, чтобы админ мог забрать файл вручную
+                return serverBackupPath;
             }
         }
+        // Если не удалось определить хост — возвращаем серверный путь
+        return serverBackupPath;
     }
 
     public List<BackupInfo> listBackups() {
@@ -164,6 +162,23 @@ public class BackupService {
         return url.substring(idx, endIdx);
     }
 
+    private String extractHost(String url) {
+        try {
+            String prefix = "jdbc:sqlserver://";
+            int i = url.indexOf(prefix);
+            if (i == -1) return null;
+            int start = i + prefix.length();
+            int end = url.indexOf(";", start);
+            String hostPort = (end == -1 ? url.substring(start) : url.substring(start, end));
+            int slash = hostPort.indexOf('\\'); // instance
+            String hostOnly = (slash != -1 ? hostPort.substring(0, slash) : hostPort);
+            int colon = hostOnly.indexOf(':');
+            return (colon != -1 ? hostOnly.substring(0, colon) : hostOnly);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public static class BackupInfo {
         public String filename;
         public long size;
@@ -189,4 +204,3 @@ public class BackupService {
         }
     }
 }
-
